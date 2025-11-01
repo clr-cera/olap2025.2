@@ -9,9 +9,11 @@ object Main {
   def main(args : Array[String]) : Unit = {
     import SparkSessionManager.instance.implicits._
     val inpe = InpeRawCsvExtractor.extract(InpeRawCsvExtractor.defaultConfig)
-    val ibge = IbgeMunicipiosExtractor.extract(IbgeMunicipiosExtractor.defaultConfig)
-    val joined = MunicipiosQueimadasJoiner.join(inpe, ibge)
-    joined.groupBy($"id").count().filter($"count" > 1).show(100)
+    val dateDimension = transformers.QueimadaDateDimensionTransformer.transform(inpe.toDF())
+    dateDimension.show(30)
+    //    val ibge = IbgeMunicipiosExtractor.extract(IbgeMunicipiosExtractor.defaultConfig)
+//    val joined = MunicipiosQueimadasJoiner.join(inpe, ibge)
+//    joined.groupBy($"id").count().filter($"count" > 1).show(100)
     SparkSessionManager.instance.stop()
   }
 }

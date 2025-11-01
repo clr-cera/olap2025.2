@@ -38,6 +38,7 @@ object InpeRawCsvExtractor extends Extractor[InpeRawModel] {
     import spark.implicits._
     val readBuilder = spark.read.format(options.format)
       .schema(schemaDDL)
+      .option("inferSchema", "false")
     val configuredBuilder = options.options.foldLeft(readBuilder) {
       case(b, (key, value)) => b.option(key, value)
     }
