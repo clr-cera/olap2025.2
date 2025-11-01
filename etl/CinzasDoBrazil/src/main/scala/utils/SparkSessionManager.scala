@@ -4,7 +4,7 @@ import scala.transient
 import org.apache.spark.sql._
 import config.SparkConfig
 
-
+// Singleton for the SparkSession
 object SparkSessionManager {
   @transient lazy val instance : SparkSession = {
     val builder = SparkSession.builder()

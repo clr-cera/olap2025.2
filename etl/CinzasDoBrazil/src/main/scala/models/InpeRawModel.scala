@@ -1,5 +1,6 @@
 package models
 
+// Represents data from INPE BDQueimadas
 case class InpeRawModel(
                          id : Long,
                          ano: Int,

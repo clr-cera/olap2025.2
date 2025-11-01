@@ -7,7 +7,7 @@ import org.apache.spark.sql.functions._
 import utils.SparkSessionManager
 
 
-
+// Extracts raw fire data from csv format
 object InpeRawCsvExtractor extends Extractor[InpeRawModel] {
 
   val schemaDDL = """
@@ -29,14 +29,13 @@ object InpeRawCsvExtractor extends Extractor[InpeRawModel] {
   //  Only for ease of use, may be changed later, copy this code if needed
   val defaultConfig = SourceConfig(
     path = "data/INPE_09_2024.csv",
-    format = "csv",
     options = Map("header" -> "true")
   )
 
   override def extract(options: SourceConfig): Dataset[InpeRawModel] = {
     val spark = SparkSessionManager.instance
     import spark.implicits._
-    val readBuilder = spark.read.format(options.format)
+    val readBuilder = spark.read.format("csv")
       .schema(schemaDDL)
       .option("inferSchema", "false")
     val configuredBuilder = options.options.foldLeft(readBuilder) {

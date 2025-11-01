@@ -4,7 +4,7 @@ import models.{IbgeMunicipioModel, InpeRawModel}
 import org.apache.spark.sql.{DataFrame, Dataset}
 import utils.SparkSessionManager
 
-
+// Joins Muncicipal tables to the fire tables as to have sity names in the fire table
 object MunicipiosQueimadasJoiner extends Joiner[InpeRawModel, IbgeMunicipioModel]{
 
   override def join(queimadas: Dataset[InpeRawModel], municipios: Dataset[IbgeMunicipioModel]): DataFrame = {

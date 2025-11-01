@@ -1,5 +1,7 @@
 package models
 
+
+// Represents the date dimension to be included in the final star schema
 case class QueimadaDateDimensionModel(
                                   id: Long,
                                   ano: Int,

@@ -5,7 +5,7 @@ import models.QueimadaDateDimensionModel
 import org.apache.spark.sql.functions._
 import utils.SparkSessionManager
 
-
+// Generates the date dimension for the fire dataframe
 object QueimadaDateDimensionTransformer extends Transformer[QueimadaDateDimensionModel] {
 
   override def transform(queimadas: DataFrame): Dataset[QueimadaDateDimensionModel] = {

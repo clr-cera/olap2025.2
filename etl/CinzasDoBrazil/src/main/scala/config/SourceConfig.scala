@@ -1,3 +1,7 @@
 package config
 
-case class SourceConfig(path : String, format : String, options : Map[String, String])
+
+// Configurations for Extractors
+case class SourceConfig(path : String, // Path to source
+                        options : Map[String, String] // Map of options passed to read builder
+                       )
