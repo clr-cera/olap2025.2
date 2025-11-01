@@ -3,6 +3,7 @@ package extractors
 import config.SourceConfig
 import models.InpeRawModel
 import org.apache.spark.sql.Dataset
+import org.apache.spark.sql.functions._
 import utils.SparkSessionManager
 
 
@@ -25,6 +26,13 @@ object InpeRawCsvExtractor extends Extractor[InpeRawModel] {
   potencia_radiativa_fogo DOUBLE
   """
 
+  //  Only for ease of use, may be changed later, copy this code if needed
+  val defaultConfig = SourceConfig(
+    path = "data/INPE_09_2024.csv",
+    format = "csv",
+    options = Map("header" -> "true")
+  )
+
   override def extract(options: SourceConfig): Dataset[InpeRawModel] = {
     val spark = SparkSessionManager.instance
     import spark.implicits._
@@ -34,6 +42,8 @@ object InpeRawCsvExtractor extends Extractor[InpeRawModel] {
       case(b, (key, value)) => b.option(key, value)
     }
     val df = configuredBuilder.load(options.path)
-    df.as[InpeRawModel]
+    df
+      .withColumn("id", monotonically_increasing_id())
+      .as[InpeRawModel]
   }
 }

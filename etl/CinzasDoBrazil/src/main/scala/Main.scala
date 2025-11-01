@@ -1,14 +1,17 @@
 import config.SourceConfig
-import extractors.InpeRawCsvExtractor
+import extractors.{IbgeMunicipiosExtractor, InpeRawCsvExtractor}
 import utils.SparkSessionManager
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql._
+import joiners._
 
 object Main {
-  def main(args : Array[String]) = {
-    val ds = InpeRawCsvExtractor.extract(SourceConfig(
-      path = getClass.getResource("INPE_09_2024.csv").getPath,
-      format = "csv",
-      options = Map("header" -> "true")
-    ))
+  def main(args : Array[String]) : Unit = {
+    import SparkSessionManager.instance.implicits._
+    val inpe = InpeRawCsvExtractor.extract(InpeRawCsvExtractor.defaultConfig)
+    val ibge = IbgeMunicipiosExtractor.extract(IbgeMunicipiosExtractor.defaultConfig)
+    val joined = MunicipiosQueimadasJoiner.join(inpe, ibge)
+    joined.groupBy($"id").count().filter($"count" > 1).show(100)
     SparkSessionManager.instance.stop()
   }
 }
