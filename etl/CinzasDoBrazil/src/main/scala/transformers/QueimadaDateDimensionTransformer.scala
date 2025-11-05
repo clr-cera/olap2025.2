@@ -40,6 +40,7 @@ object QueimadaDateDimensionTransformer extends Transformer[QueimadaDateDimensio
       .withColumn("fimDeSemana", $"diaDaSemana".isin(1, 7))
       .withColumn("estacao", mapEstacao($"data_hora"))
       .drop("data_hora")
+      .dropDuplicates("dia", "mes", "ano")
       .as[QueimadaDateDimensionModel]
 
     dateDimensionTable

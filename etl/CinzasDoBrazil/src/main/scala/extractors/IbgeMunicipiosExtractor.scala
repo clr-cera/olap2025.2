@@ -19,13 +19,14 @@ object IbgeMunicipiosExtractor extends Extractor[IbgeMunicipioModel] {
 //  Only for ease of use, may be changed later, copy this code if needed
   val defaultConfig = SourceConfig(
     path = "data/municipios.csv",
+    format = "csv",
     options = Map("sep" -> ";", "header" -> "true", "inferSchema" -> "false", "encoding" -> "iso-8859-1")
   )
 
   override def extract(options: SourceConfig): Dataset[IbgeMunicipioModel] = {
     val spark = SparkSessionManager.instance
     import spark.implicits._
-    val readBuilder = spark.read.format("csv")
+    val readBuilder = spark.read.format(options.format)
       .schema(schemaDDL)
     val configuredBuilder = options.options.foldLeft(readBuilder) {
       case(b, (key, value)) => b.option(key, value)
