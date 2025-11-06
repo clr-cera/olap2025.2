@@ -17,6 +17,7 @@ object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimens
       .withColumn("estado", $"sigla")
       .withColumn("regiao", $"regiao")
       .select("id", "id_municipio", "municipio", "estado", "regiao")
+      .dropDuplicates("id_municipio")
     localDimensionTable.as[QueimadaLocalDimensionModel].filter(_.id_municipio != 0)
   }
 }

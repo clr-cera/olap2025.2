@@ -17,6 +17,7 @@ object QueimadaPointDimensionTransformer extends Transformer [QueimadaPointDimen
       .withColumn("longitude", $"longitude")
       .withColumn("bioma", $"bioma")
       .select("id", "local_fk", "latitude", "longitude", "bioma")
+      .dropDuplicates("latitude", "longitude")
       .as[QueimadaPointDimensionModel]
   }
 }
