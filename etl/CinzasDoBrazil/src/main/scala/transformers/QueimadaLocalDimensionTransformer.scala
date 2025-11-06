@@ -13,10 +13,10 @@ object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimens
     val localDimensionTable = dataset
       .withColumn("id", monotonically_increasing_id())
       .withColumn("id_municipio", $"codigoDoMunicipioIbge")
-      .withColumn("municipio", $"municipioIbge")
+      .withColumn("municipio", $"municipioTom")
       .withColumn("estado", $"sigla")
       .withColumn("regiao", $"regiao")
       .select("id", "id_municipio", "municipio", "estado", "regiao")
-    localDimensionTable.as[QueimadaLocalDimensionModel]
+    localDimensionTable.as[QueimadaLocalDimensionModel].filter(_.id_municipio != 0)
   }
 }

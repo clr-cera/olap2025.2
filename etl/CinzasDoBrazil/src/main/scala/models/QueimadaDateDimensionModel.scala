@@ -9,10 +9,10 @@ case class QueimadaDateDimensionModel(
                                   trimestre: Int,
                                   mes: Int,
                                   dia: Int,
-                                  diaDaSemana: Int,
-                                  diaDoAno: Int,
-                                  numeroSemana: Int,
-                                  fimDeSemana: Boolean,
+                                  dia_da_semana: Int,
+                                  dia_do_ano: Int,
+                                  numero_semana: Int,
+                                  fim_de_semana: Boolean,
                                   estacao: String
                                 )
 

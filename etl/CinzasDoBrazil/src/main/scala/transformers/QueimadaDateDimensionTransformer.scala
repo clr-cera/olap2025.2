@@ -30,17 +30,17 @@ object QueimadaDateDimensionTransformer extends Transformer[QueimadaDateDimensio
     })
     val dateDimensionTable = queimadas
       .select("ano", "mes", "data_hora")
-      .withColumn("id", monotonically_increasing_id())
       .withColumn("semestre", when($"mes" <= 6, 1).otherwise(2))
       .withColumn("trimestre", ceil($"mes" / 4).cast("int"))
       .withColumn("dia", dayofmonth($"data_hora"))
-      .withColumn("diaDaSemana", dayofweek($"data_hora"))
-      .withColumn("diaDoAno", dayofyear($"data_hora"))
-      .withColumn("numeroSemana", weekofyear(($"data_hora")))
-      .withColumn("fimDeSemana", $"diaDaSemana".isin(1, 7))
+      .withColumn("dia_da_semana", dayofweek($"data_hora"))
+      .withColumn("dia_do_ano", dayofyear($"data_hora"))
+      .withColumn("numero_semana", weekofyear(($"data_hora")))
+      .withColumn("fim_de_semana", $"dia_da_semana".isin(1, 7))
       .withColumn("estacao", mapEstacao($"data_hora"))
       .drop("data_hora")
       .dropDuplicates("dia", "mes", "ano")
+      .withColumn("id", monotonically_increasing_id())
       .as[QueimadaDateDimensionModel]
 
     dateDimensionTable

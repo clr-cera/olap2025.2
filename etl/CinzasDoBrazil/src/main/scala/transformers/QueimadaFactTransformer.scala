@@ -20,6 +20,7 @@ object QueimadaFactTransformer {
       .join(pointDim.withColumnRenamed("id", "ponto_fk"), inpeLocalJoinExpr, "left")
       .join(horarioDim.withColumnRenamed("id", "horario_fk"), inpeHorarioJoinExpr, "left")
       .select("data_fk", "ponto_fk", "horario_fk", "risco_fogo", "frp", "dias_sem_chuva")
+      .dropDuplicates("data_fk", "ponto_fk", "horario_fk")
       .as[QueimadaFactModel]
   }
 }
