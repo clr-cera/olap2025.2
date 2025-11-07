@@ -13,7 +13,6 @@ object QueimadaSchemaLoader {
   def load(
           dimData : Dataset[QueimadaDateDimensionModel],
           dimHorario : Dataset[HorarioDimensionModel],
-          dimPonto : Dataset[QueimadaPointDimensionModel],
           dimLocal : Dataset[QueimadaLocalDimensionModel],
           fctQueimada : Dataset[QueimadaFactModel]
           ) : Unit =
@@ -36,9 +35,6 @@ object QueimadaSchemaLoader {
         .mode(SaveMode.Append)
         .jdbc(jdbcUrl, "etl_result.dim_local", connectionProperties)
 
-      dimPonto.write
-        .mode(SaveMode.Append)
-        .jdbc(jdbcUrl, "etl_result.dim_ponto", connectionProperties)
 
       dimHorario.write
         .mode(SaveMode.Append)

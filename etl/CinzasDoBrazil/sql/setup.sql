@@ -25,19 +25,10 @@ CREATE TABLE IF NOT EXISTS etl_result.dim_local
     id_municipio BIGINT NOT NULL,
     estado VARCHAR(255) NOT NULL,
     regiao VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id)
-);
-
-CREATE TABLE IF NOT EXISTS etl_result.dim_ponto
-(
-    id BIGINT,
-    local_fk BIGINT NOT NULL,
     latitude FLOAT NOT NULL,
     longitude FLOAT NOT NULL,
     bioma VARCHAR(255) NOT NULL,
-    PRIMARY KEY (id),
-    FOREIGN KEY (local_fk)
-        REFERENCES etl_result.dim_local(id)
+    PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS etl_result.dim_horario
@@ -51,17 +42,17 @@ CREATE TABLE IF NOT EXISTS etl_result.dim_horario
 CREATE TABLE IF NOT EXISTS etl_result.fct_queimada
 (
     data_fk BIGINT,
-    ponto_fk BIGINT,
+    local_fk BIGINT,
     horario_fk BIGINT,
     risco_fogo FLOAT,
     frp FLOAT,
     dias_sem_chuva SMALLINT,
     FOREIGN KEY (data_fk)
         REFERENCES  etl_result.dim_data(id),
-    FOREIGN KEY (ponto_fk)
-        REFERENCES etl_result.dim_ponto(id),
+    FOREIGN KEY (local_fk)
+        REFERENCES etl_result.dim_local(id),
     FOREIGN KEY (horario_fk)
         REFERENCES etl_result.dim_horario(id),
-    PRIMARY KEY (data_fk, ponto_fk, horario_fk)
+    PRIMARY KEY (data_fk, local_fk, horario_fk)
 );
 

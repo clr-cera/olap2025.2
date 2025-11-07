@@ -1,11 +1,19 @@
 package transformers
 
-import models.QueimadaLocalDimensionModel
+import models.{IbgeMunicipioModel, InpeRawModel, QueimadaLocalDimensionModel}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{DataFrame, Dataset, Row}
 
 object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimensionModel]{
-// Builds the Local dimension table for the queimada star schema from the IBGE cities table joined with region data
+// Builds the Local dimension table for the queimada star schema from the INPE table joined with IBGE cities table joined with region data
+
+
+  def joinInpeIbgeRegiao(inpe: Dataset[InpeRawModel], ibge: Dataset[IbgeMunicipioModel], regioes: Dataset[Row]): DataFrame = {
+    import utils.SparkSessionManager.instance.implicits._
+    val projectedUfDf = regioes.select("sigla", "regiao")
+    inpe.join(ibge, inpe("id_municipio") === ibge("codigoDoMunicipioIbge"), "left")
+      .join(regioes, $"uf" === regioes("sigla"), "left")
+  }
 
 
   override def transform(dataset: DataFrame): Dataset[QueimadaLocalDimensionModel] = {
@@ -16,8 +24,11 @@ object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimens
       .withColumn("municipio", $"municipioTom")
       .withColumn("estado", $"sigla")
       .withColumn("regiao", $"regiao")
-      .select("id", "id_municipio", "municipio", "estado", "regiao")
-      .dropDuplicates("id_municipio")
+      .withColumn("latitude", $"latitude")
+      .withColumn("longitude", $"longitude")
+      .withColumn("bioma", $"bioma")
+      .select("id", "id_municipio", "municipio", "estado", "regiao", "latitude", "longitude", "bioma")
+      .dropDuplicates("id_municipio", "latitude", "longitude")
     localDimensionTable.as[QueimadaLocalDimensionModel].filter(_.id_municipio != 0)
   }
 }

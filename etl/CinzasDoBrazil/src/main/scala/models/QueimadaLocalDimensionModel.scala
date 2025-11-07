@@ -5,6 +5,9 @@ case class QueimadaLocalDimensionModel(
                                       municipio : String,
                                       id_municipio : Long,
                                       estado : String,
-                                      regiao : String
+                                      regiao : String,
+                                      latitude : Double,
+                                      longitude : Double,
+                                      bioma : String
                                       )
 

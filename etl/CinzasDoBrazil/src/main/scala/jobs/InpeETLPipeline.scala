@@ -5,7 +5,7 @@ import extractors.{IbgeMunicipiosExtractor, InpeRawExtractor, RegiaoExtractor}
 import generators.HorarioDimensionGenerator
 import joiners.{LocalInpeJoiner, RegiaoJoiner}
 import loaders.QueimadaSchemaLoader
-import transformers.{QueimadaFactTransformer, QueimadaLocalDimensionTransformer, QueimadaPointDimensionTransformer}
+import transformers.{QueimadaFactTransformer, QueimadaLocalDimensionTransformer}
 
 class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConfig, val regionSrc : SourceConfig)
 {
@@ -17,28 +17,25 @@ class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConf
 
     val dateDimension = transformers.QueimadaDateDimensionTransformer.transform(inpe.toDF())
 
-    val regiaoJoined = RegiaoJoiner.join(ibge, uf)
+    val regiaoJoined = QueimadaLocalDimensionTransformer.joinInpeIbgeRegiao(inpe, ibge, uf)
 
-    val transLocalDim = QueimadaLocalDimensionTransformer.transform(regiaoJoined)
+    val localDim = QueimadaLocalDimensionTransformer.transform(regiaoJoined)
 
-    val localInpeJoined = LocalInpeJoiner.join(inpe, transLocalDim)
-
-    val pointDim = QueimadaPointDimensionTransformer.transform(localInpeJoined)
+    val localInpeJoined = LocalInpeJoiner.join(inpe, localDim)
 
     val horarioDim = HorarioDimensionGenerator.generate()
 
     val queimadaFact = QueimadaFactTransformer.transform(
       inpe,
       dateDimension,
-      pointDim,
+      localDim,
       horarioDim
     )
 
     QueimadaSchemaLoader.load(
       dateDimension,
       horarioDim,
-      pointDim,
-      transLocalDim,
+      localDim,
       queimadaFact
     )
 
