@@ -56,3 +56,27 @@ CREATE TABLE IF NOT EXISTS etl_result.fct_queimada
     PRIMARY KEY (data_fk, local_fk, horario_fk)
 );
 
+CREATE TABLE IF NOT EXISTS etl_result.fct_clima
+(
+    data_fk         BIGINT      NOT NULL,  -- Chave da Dimensão Data
+    local_fk        BIGINT      NOT NULL,  -- Chave da Dimensão Local (Município)
+    horario_fk      BIGINT      NOT NULL,  -- Chave da Dimensão Horário
+
+    temperatura         FLOAT,
+    precipitacao_dia        FLOAT,
+    umidade_relativa    FLOAT,
+    vento_velocidade    FLOAT,
+    vento_direcao       SMALLINT,
+    co_ppb              FLOAT,
+    no2_ppb             FLOAT,
+    o3_ppb              FLOAT,
+    pm25_ugm3           FLOAT,
+    so2_ugm3            FLOAT,
+
+    PRIMARY KEY (data_fk, local_fk, horario_fk),
+
+    FOREIGN KEY (data_fk) REFERENCES etl_result.dim_data(id),
+    FOREIGN KEY (local_fk) REFERENCES etl_result.dim_local(id),
+    FOREIGN KEY (horario_fk) REFERENCES etl_result.dim_horario(id)
+);
+

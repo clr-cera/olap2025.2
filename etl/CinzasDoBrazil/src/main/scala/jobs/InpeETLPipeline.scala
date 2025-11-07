@@ -4,8 +4,9 @@ import config.SourceConfig
 import extractors.{IbgeMunicipiosExtractor, InpeRawExtractor, RegiaoExtractor, SisamExtractor}
 import generators.HorarioDimensionGenerator
 import joiners.{LocalInpeJoiner, RegiaoJoiner}
-import loaders.QueimadaSchemaLoader
+import loaders.SchemaLoader
 import models.{InpeRawModel, SisamModel}
+import org.apache.spark.SparkContext
 import org.apache.spark.sql.catalyst.expressions.DateAdd
 import org.apache.spark.sql.{DataFrame, Dataset}
 import transformers.{QueimadaDateDimensionTransformer, QueimadaFactTransformer, QueimadaLocalDimensionTransformer, SisamFactTransformer}
@@ -15,13 +16,15 @@ import org.apache.spark.sql.types.{DoubleType, StringType}
 class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConfig, val regionSrc : SourceConfig, sisamSrc : SourceConfig)
 {
   import utils.SparkSessionManager.instance.implicits._
-  lazy val inpeDs = InpeRawExtractor.extract(inpeSrc).filter($"ano".between(2013, 2015))
+  lazy val inpeDs = InpeRawExtractor.extract(inpeSrc)
+//    .filter($"ano".between(2013, 2015))
 
   lazy val ibgeDs = IbgeMunicipiosExtractor.extract(ibgeCitiesSrc)
 
   lazy val ufDf = RegiaoExtractor.extract(regionSrc)
 
-  lazy val sisamDs =  SisamExtractor.extract(sisamSrc).filter($"ano".between(2013, 2015))
+  lazy val sisamDs =  SisamExtractor.extract(sisamSrc)
+//    .filter($"ano".between(2013, 2015))
 
 
   def unionAndSelectDate(): DataFrame = {
@@ -52,10 +55,8 @@ class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConf
 
   def executePipelineNew() = {
 
-
-
       val dateDimension =  QueimadaDateDimensionTransformer.transform(unionAndSelectDate())
-      scala.io.StdIn.readLine()
+    
       val localDimension = QueimadaLocalDimensionTransformer.transform(unionAndSelectLocal(joinRegion(inpeDs.toDF()), joinRegion(sisamDs.toDF())))
 
       val horarioDimension = HorarioDimensionGenerator.generate()
@@ -74,9 +75,13 @@ class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConf
         horarioDimension
       )
 
-    println(s"NUMERO DE LINHAS SISAM ORIGINAL: ${sisamDs.count()}")
-    println(s"NUMERO DE LINHAS SISAM FATOS: ${sisamFact.count()}")
-    sisamFact.show(100, false)
+      SchemaLoader.load(
+        dateDimension,
+        horarioDimension,
+        localDimension,
+        queimadaFact,
+        sisamFact
+      )
 
   }
 
@@ -97,7 +102,7 @@ class InpeETLPipeline(val inpeSrc : SourceConfig, val ibgeCitiesSrc : SourceConf
 //
 //
 //
-//    QueimadaSchemaLoader.load(
+//    SchemaLoader.load(
 //      dateDimension,
 //      horarioDim,
 //      localDim,

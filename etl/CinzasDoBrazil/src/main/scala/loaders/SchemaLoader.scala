@@ -7,14 +7,15 @@ import utils.SparkSessionManager
 import java.util.Properties
 
 
-object QueimadaSchemaLoader {
+object SchemaLoader {
   lazy val cfg = ConfigFactory.load()
 
   def load(
           dimData : Dataset[QueimadaDateDimensionModel],
           dimHorario : Dataset[HorarioDimensionModel],
           dimLocal : Dataset[QueimadaLocalDimensionModel],
-          fctQueimada : Dataset[QueimadaFactModel]
+          fctQueimada : Dataset[QueimadaFactModel],
+          fctClima : Dataset[SisamFactModel]
           ) : Unit =
     {
       val spark = SparkSessionManager.instance
@@ -43,6 +44,10 @@ object QueimadaSchemaLoader {
       fctQueimada.write
         .mode(SaveMode.Append)
         .jdbc(jdbcUrl, "etl_result.fct_queimada", connectionProperties)
+
+      fctQueimada.write
+        .mode(SaveMode.Append)
+        .jdbc(jdbcUrl, "etl_result.fct_clima", connectionProperties)
 
     }
 }
