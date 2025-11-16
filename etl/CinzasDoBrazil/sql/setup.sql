@@ -25,9 +25,9 @@ CREATE TABLE IF NOT EXISTS etl_result.dim_local
     id_municipio BIGINT NOT NULL,
     estado VARCHAR(255) NOT NULL,
     regiao VARCHAR(255) NOT NULL,
-    latitude FLOAT NOT NULL,
-    longitude FLOAT NOT NULL,
-    bioma VARCHAR(255) NOT NULL,
+    latitude FLOAT,
+    longitude FLOAT,
+    bioma VARCHAR(255),
     PRIMARY KEY (id)
 );
 

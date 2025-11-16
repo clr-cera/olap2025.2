@@ -45,7 +45,7 @@ object SchemaLoader {
         .mode(SaveMode.Append)
         .jdbc(jdbcUrl, "etl_result.fct_queimada", connectionProperties)
 
-      fctQueimada.write
+      fctClima.write
         .mode(SaveMode.Append)
         .jdbc(jdbcUrl, "etl_result.fct_clima", connectionProperties)
 

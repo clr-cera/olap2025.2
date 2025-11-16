@@ -4,6 +4,7 @@ import config.SourceConfig
 import models.InpeRawModel
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.{IntegerType, LongType, StringType}
 import utils.SparkSessionManager
 
 
@@ -11,16 +12,16 @@ import utils.SparkSessionManager
 object InpeRawExtractor extends Extractor[InpeRawModel] {
 
   val schemaDDL = """
-  ano INT,
-  mes INT,
+  ano LONG,
+  mes LONG,
   data_hora TIMESTAMP,
   bioma STRING,
   sigla_uf STRING,
-  id_municipio INT,
+  id_municipio BINARY,
   latitude DOUBLE,
   longitude DOUBLE,
   satelite STRING,
-  dias_sem_chuva INT,
+  dias_sem_chuva DOUBLE,
   precipitacao DOUBLE,
   risco_fogo DOUBLE,
   potencia_radiativa_fogo DOUBLE
@@ -28,8 +29,8 @@ object InpeRawExtractor extends Extractor[InpeRawModel] {
 
   //  Only for ease of use, may be changed later, copy this code if needed
   val defaultConfig = SourceConfig(
-    path = "data/INPE_09_2024.csv",
-    format = "csv",
+    path = "data/queimadas-full.pqt.zstd",
+    format = "parquet",
     options = Map("header" -> "true")
   )
 
@@ -45,6 +46,10 @@ object InpeRawExtractor extends Extractor[InpeRawModel] {
     val df = configuredBuilder.load(options.path)
     df
       .withColumn("id", monotonically_increasing_id())
+      .withColumn("ano", col("ano").cast(IntegerType))
+      .withColumn("mes",col("mes").cast(IntegerType))
+      .withColumn("dias_sem_chuva",col("dias_sem_chuva").cast(IntegerType))
+      .withColumn("id_municipio", col("id_municipio").cast(StringType).cast(IntegerType))
       .as[InpeRawModel]
   }
 }
