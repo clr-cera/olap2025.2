@@ -9,6 +9,12 @@ import utils.SparkSessionManager
 // Extracts data for municipal names and codes
 object IbgeMunicipiosExtractor extends Extractor[IbgeMunicipioModel] {
 
+  //  Only for ease of use, may be changed later, copy this code if needed
+  val defaultConfig = SourceConfig(
+    path = "data/municipios.csv",
+    format = "csv",
+    options = Map("sep" -> ";", "header" -> "true", "inferSchema" -> "false", "encoding" -> "iso-8859-1")
+  )
   private val schemaDDL =
     """`codigoDoMunicipioTom` BIGINT,
       |`codigoDoMunicipioIbge` BIGINT,
@@ -16,20 +22,13 @@ object IbgeMunicipiosExtractor extends Extractor[IbgeMunicipioModel] {
       |`municipioIbge` STRING,
       |`uf` STRING""".stripMargin
 
-//  Only for ease of use, may be changed later, copy this code if needed
-  val defaultConfig = SourceConfig(
-    path = "data/municipios.csv",
-    format = "csv",
-    options = Map("sep" -> ";", "header" -> "true", "inferSchema" -> "false", "encoding" -> "iso-8859-1")
-  )
-
   override def extract(options: SourceConfig): Dataset[IbgeMunicipioModel] = {
     val spark = SparkSessionManager.instance
     import spark.implicits._
     val readBuilder = spark.read.format(options.format)
       .schema(schemaDDL)
     val configuredBuilder = options.options.foldLeft(readBuilder) {
-      case(b, (key, value)) => b.option(key, value)
+      case (b, (key, value)) => b.option(key, value)
     }
     val df = configuredBuilder.load(options.path)
     df.as[IbgeMunicipioModel]

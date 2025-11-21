@@ -1,18 +1,17 @@
 package transformers
 
-import models.{HorarioDimensionModel, InpeRawModel, QueimadaDateDimensionModel, QueimadaFactModel, QueimadaLocalDimensionModel, SisamFactModel, SisamModel}
-import org.apache.spark.sql.{DataFrame, Dataset}
+import models._
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 
 
 object SisamFactTransformer {
 
   def transform(
-                 sisamData : Dataset[SisamModel],
-                 dateDim : Dataset[QueimadaDateDimensionModel],
-                 localDim : Dataset[QueimadaLocalDimensionModel],
-                 horarioDim : Dataset[HorarioDimensionModel]): Dataset[SisamFactModel] =
-  {
+                 sisamData: Dataset[SisamModel],
+                 dateDim: Dataset[QueimadaDateDimensionModel],
+                 localDim: Dataset[QueimadaLocalDimensionModel],
+                 horarioDim: Dataset[HorarioDimensionModel]): Dataset[SisamFactModel] = {
     import utils.SparkSessionManager.instance.implicits._
 
     val sisamDateJoinExpr = sisamData("ano") === dateDim("ano") && month(sisamData("data_hora")) === dateDim("mes") && day(sisamData("data_hora")) === dateDim("dia")

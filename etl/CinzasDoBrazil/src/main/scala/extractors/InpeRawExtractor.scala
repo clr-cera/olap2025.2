@@ -4,14 +4,15 @@ import config.SourceConfig
 import models.InpeRawModel
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{IntegerType, LongType, StringType}
+import org.apache.spark.sql.types.{IntegerType, StringType}
 import utils.SparkSessionManager
 
 
 // Extracts raw fire data from csv format
 object InpeRawExtractor extends Extractor[InpeRawModel] {
 
-  val schemaDDL = """
+  val schemaDDL =
+    """
   ano LONG,
   mes LONG,
   data_hora TIMESTAMP,
@@ -41,14 +42,14 @@ object InpeRawExtractor extends Extractor[InpeRawModel] {
       .schema(schemaDDL)
       .option("inferSchema", "false")
     val configuredBuilder = options.options.foldLeft(readBuilder) {
-      case(b, (key, value)) => b.option(key, value)
+      case (b, (key, value)) => b.option(key, value)
     }
     val df = configuredBuilder.load(options.path)
     df
       .withColumn("id", monotonically_increasing_id())
       .withColumn("ano", col("ano").cast(IntegerType))
-      .withColumn("mes",col("mes").cast(IntegerType))
-      .withColumn("dias_sem_chuva",col("dias_sem_chuva").cast(IntegerType))
+      .withColumn("mes", col("mes").cast(IntegerType))
+      .withColumn("dias_sem_chuva", col("dias_sem_chuva").cast(IntegerType))
       .withColumn("id_municipio", col("id_municipio").cast(StringType).cast(IntegerType))
       .as[InpeRawModel]
   }

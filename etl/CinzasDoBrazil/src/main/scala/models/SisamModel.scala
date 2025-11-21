@@ -19,21 +19,20 @@ import java.sql.Timestamp
 //|-- vento_direcao: long (nullable = true)
 
 
-
 // Dados Brutos do Sisam
 case class SisamModel(
-                      ano: Option[Int],
-                      sigla_uf: Option[String],
-                      id_municipio: Option[String],
-                      data_hora: Option[Timestamp],
-                      co_ppb: Option[Double],
-                      no2_ppb: Option[Double],
-                      o3_ppb: Option[Double],
-                      pm25_ugm3: Option[Double],
-                      so2_ugm3: Option[Double],
-                      precipitacao_dia: Option[Double],
-                      temperatura: Option[Double],
-                      umidade_relativa: Option[Double],
-                      vento_direcao: Option[Int],
-                      vento_velocidade: Option[Double]
-                      )
+                       ano: Option[Int],
+                       sigla_uf: Option[String],
+                       id_municipio: Option[String],
+                       data_hora: Option[Timestamp],
+                       co_ppb: Option[Double],
+                       no2_ppb: Option[Double],
+                       o3_ppb: Option[Double],
+                       pm25_ugm3: Option[Double],
+                       so2_ugm3: Option[Double],
+                       precipitacao_dia: Option[Double],
+                       temperatura: Option[Double],
+                       umidade_relativa: Option[Double],
+                       vento_direcao: Option[Int],
+                       vento_velocidade: Option[Double]
+                     )

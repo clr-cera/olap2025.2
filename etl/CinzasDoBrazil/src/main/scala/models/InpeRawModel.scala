@@ -2,7 +2,7 @@ package models
 
 // Represents data from INPE BDQueimadas
 case class InpeRawModel(
-                         id : Long,
+                         id: Long,
                          ano: Int,
                          mes: Int,
                          data_hora: java.sql.Timestamp,

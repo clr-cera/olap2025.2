@@ -4,8 +4,8 @@ import models.{IbgeMunicipioModel, InpeRawModel, QueimadaLocalDimensionModel}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset, Row}
 
-object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimensionModel]{
-// Builds the Local dimension table for the queimada star schema from the INPE table joined with IBGE cities table joined with region data
+object QueimadaLocalDimensionTransformer extends Transformer[QueimadaLocalDimensionModel] {
+  // Builds the Local dimension table for the queimada star schema from the INPE table joined with IBGE cities table joined with region data
 
 
   def joinInpeIbgeRegiao(inpe: Dataset[InpeRawModel], ibge: Dataset[IbgeMunicipioModel], regioes: Dataset[Row]): DataFrame = {

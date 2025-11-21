@@ -1,12 +1,11 @@
 package utils
 
-import scala.transient
-import org.apache.spark.sql._
 import config.SparkConfig
+import org.apache.spark.sql._
 
 // Singleton for the SparkSession
 object SparkSessionManager {
-  @transient lazy val instance : SparkSession = {
+  @transient lazy val instance: SparkSession = {
     val builder = SparkSession.builder()
       .appName(SparkConfig.appName)
       .master(SparkConfig.master)

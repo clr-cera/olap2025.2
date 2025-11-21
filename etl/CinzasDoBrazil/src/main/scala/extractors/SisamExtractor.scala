@@ -1,11 +1,10 @@
 package extractors
 
 import config.SourceConfig
-import models.{InpeRawModel, SisamModel}
+import models.SisamModel
 import org.apache.spark.sql.Dataset
-import org.apache.spark.sql.functions._
-import utils.SparkSessionManager
 import org.apache.spark.sql.types.IntegerType
+import utils.SparkSessionManager
 
 object SisamExtractor extends Extractor[SisamModel] {
 
@@ -20,7 +19,7 @@ object SisamExtractor extends Extractor[SisamModel] {
     import spark.implicits._
     val readBuilder = spark.read.format(options.format)
     val configuredBuilder = options.options.foldLeft(readBuilder) {
-      case(b, (key, value)) => b.option(key, value)
+      case (b, (key, value)) => b.option(key, value)
     }
     val df = configuredBuilder.load(options.path)
     df.withColumn("ano_temp", $"ano".cast(IntegerType))

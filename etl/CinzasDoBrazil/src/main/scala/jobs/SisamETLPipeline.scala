@@ -6,14 +6,13 @@ import models.{HorarioDimensionModel, IbgeMunicipioModel, QueimadaDateDimensionM
 import org.apache.spark.sql.{DataFrame, Dataset}
 
 class SisamETLPipeline(
-                      sisamSrc : SourceConfig,
-                      ibgeDataset : Dataset[IbgeMunicipioModel],
-                      regiaoDf : DataFrame,
-                      queimadaLocalDimension : Dataset[QueimadaLocalDimensionModel],
-                      queimadaDateDimension : Dataset[QueimadaDateDimensionModel],
-                      queimadaHorarioDimension : Dataset[HorarioDimensionModel]
-                      )
-{
+                        sisamSrc: SourceConfig,
+                        ibgeDataset: Dataset[IbgeMunicipioModel],
+                        regiaoDf: DataFrame,
+                        queimadaLocalDimension: Dataset[QueimadaLocalDimensionModel],
+                        queimadaDateDimension: Dataset[QueimadaDateDimensionModel],
+                        queimadaHorarioDimension: Dataset[HorarioDimensionModel]
+                      ) {
 
   def execute() = {
     // Extracts sisam dataset

@@ -1,8 +1,8 @@
 package transformers
 
-import org.apache.spark.sql.{DataFrame, Dataset}
 import models.QueimadaDateDimensionModel
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, Dataset}
 import utils.SparkSessionManager
 
 // Generates the date dimension for the fire dataframe
@@ -12,7 +12,7 @@ object QueimadaDateDimensionTransformer extends Transformer[QueimadaDateDimensio
     import SparkSessionManager.instance.implicits._
     val mapEstacao = udf((data_hora: java.sql.Timestamp) => {
       val date = data_hora.toLocalDateTime
-       date.getMonth.getValue match {
+      date.getMonth.getValue match {
         case 1 | 2 => "Verão"
         case 3 if date.getDayOfMonth >= 21 => "Outono" // Assuming equinox
         case 3 => "Verão"
