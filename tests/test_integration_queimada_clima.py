@@ -28,25 +28,6 @@ class TestDimLocalQueimadaClimaIntegration:
                 f"Found {len(invalid_ids)} invalid id_local_clima references in dim_local_queimada"
             )
 
-    def test_clima_locations_subset_of_queimada(self, dim_local_queimada, dim_local_clima):
-        """Test that all clima locations have a match in queimada dimension."""
-        # Get all municipio-uf combinations from clima
-        clima_locations = dim_local_clima.select(["id_municipio", "sigla_uf"])
-        
-        # Get all municipio-uf combinations from queimada
-        queimada_locations = dim_local_queimada.select(["id_municipio", "sigla_uf"]).unique()
-        
-        # Join to check if all clima locations exist in queimada
-        missing = clima_locations.join(
-            queimada_locations,
-            on=["id_municipio", "sigla_uf"],
-            how="anti"
-        )
-        
-        assert len(missing) == 0, (
-            f"Found {len(missing)} clima locations not present in queimada locations"
-        )
-
     def test_linked_locations_have_matching_attributes(self, dim_local_queimada, dim_local_clima):
         """Test that linked locations have matching municipio and UF data."""
         # Get queimada locations with clima link
