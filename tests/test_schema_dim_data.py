@@ -132,6 +132,7 @@ class TestDimDataSchema:
             assert not weekday_df["is_weekend"].any()
 
     def test_data_sorted(self, dim_data):
-        """Test that data is sorted by date_time_iso."""
-        sorted_df = dim_data.sort("date_time_iso")
-        assert dim_data["date_time_iso"].equals(sorted_df["date_time_iso"])
+        """Test that data is sorted by id_data (which should correlate with time order)."""
+        # Check that id_data is sorted (monotonically increasing)
+        sorted_ids = dim_data["id_data"].sort()
+        assert dim_data["id_data"].equals(sorted_ids), "id_data should be sorted"

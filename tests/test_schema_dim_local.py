@@ -9,7 +9,8 @@ class TestDimLocalQueimadaSchema:
         """Test that all expected columns exist."""
         expected_columns = {
             "id_local", "id_municipio", "nome_municipio", "sigla_uf",
-            "nome_uf", "regiao_uf", "bioma", "latitude", "longitude"
+            "nome_uf", "regiao_uf", "bioma", "latitude", "longitude",
+            "id_local_clima"
         }
         actual_columns = set(dim_local_queimada.columns)
         assert expected_columns == actual_columns, (

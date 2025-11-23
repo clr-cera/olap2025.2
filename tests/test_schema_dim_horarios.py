@@ -7,7 +7,7 @@ class TestDimHorariosQueimadaSchema:
 
     def test_columns_exist(self, dim_horarios_queimada):
         """Test that all expected columns exist."""
-        expected_columns = {"id_horario", "hora", "minuto"}
+        expected_columns = {"id_horario", "hora", "minuto", "id_horario_clima"}
         actual_columns = set(dim_horarios_queimada.columns)
         assert expected_columns == actual_columns, (
             f"Column mismatch. Expected: {expected_columns}, Got: {actual_columns}"

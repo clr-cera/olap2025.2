@@ -32,3 +32,21 @@ def dim_data(data_dir):
 def fct_queimadas(data_dir):
     """Load fct_queimadas data."""
     return pl.read_parquet(data_dir / "fct_queimadas.pqt.zstd")
+
+
+@pytest.fixture(scope="session")
+def dim_horarios_clima(data_dir):
+    """Load dim_horarios_clima data."""
+    return pl.read_parquet(data_dir / "dim_horarios_clima.pqt.zstd")
+
+
+@pytest.fixture(scope="session")
+def dim_local_clima(data_dir):
+    """Load dim_local_clima data."""
+    return pl.read_parquet(data_dir / "dim_local_clima.pqt.zstd")
+
+
+@pytest.fixture(scope="session")
+def fct_clima(data_dir):
+    """Load fct_clima data."""
+    return pl.read_parquet(data_dir / "fct_clima.pqt.zstd")
