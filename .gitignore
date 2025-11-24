@@ -1,4 +1,5 @@
 data/
+*.zip
 
 # Created by https://www.toptal.com/developers/gitignore/api/vim,visualstudiocode,intellij+all,python,terraform,spark,scala,java,windows,macos,linux
 # Edit at https://www.toptal.com/developers/gitignore?templates=vim,visualstudiocode,intellij+all,python,terraform,spark,scala,java,windows,macos,linux
@@ -435,6 +436,9 @@ spark-warehouse/
 
 
 ### Terraform ###
+tfplan
+*.tfplan
+
 # Local .terraform directories
 **/.terraform/*
 
@@ -536,3 +540,7 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/vim,visualstudiocode,intellij+all,python,terraform,spark,scala,java,windows,macos,linux
+
+# Override for git crypt
+!terraform.tfstate
+!*.tfvars

@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame, SparkSession
 from etl.config import SinkConfig, SinkType
 import os
 import logging
+import pkgutil
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,12 @@ class Loader:
         except Exception as e:
             logger.warning(f"Could not load PostgreSQL driver or connect directly: {e}")
             
+        # Try to register the driver class explicitly before using DriverManager
+        try:
+            self.spark.sparkContext._gateway.jvm.java.lang.Class.forName("org.postgresql.Driver")
+        except Exception as e:
+            logger.warning(f"Could not register PostgreSQL driver class: {e}")
+
         driver_manager = self.spark.sparkContext._gateway.jvm.java.sql.DriverManager
         props = self.spark.sparkContext._gateway.jvm.java.util.Properties()
         if config.connection_properties:
@@ -79,10 +86,13 @@ class Loader:
         if config.sink_type != SinkType.POSTGRES:
             return
 
-        migration_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), "migrations", "001_init_schema.sql")
         try:
-            with open(migration_file, "r") as f:
-                sql_content = f.read()
+            # Read migration file from package resources
+            sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema.sql")
+            if not sql_bytes:
+                raise FileNotFoundError("Migration file not found in package: etl/migrations/001_init_schema.sql")
+            
+            sql_content = sql_bytes.decode('utf-8')
                 
             # Split by semicolon to handle multiple statements
             statements = [s.strip() for s in sql_content.split(';') if s.strip()]
@@ -172,6 +182,7 @@ class Loader:
             writer = df.write.mode(mode).format("jdbc")
             writer = writer.option("url", config.jdbc_url)
             writer = writer.option("dbtable", config.table_name)
+            writer = writer.option("driver", "org.postgresql.Driver")
             writer = writer.option("batchsize", "50000")
             
             # Ensure rewriteBatchedStatements is true for performance

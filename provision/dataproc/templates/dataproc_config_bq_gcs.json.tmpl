@@ -1,0 +1,51 @@
+{
+  "spark_config": {
+    "spark.app.name": "Wildfire ETL - Dataproc (BQ Source -> GCS Sink)",
+    "spark.sql.shuffle.partitions": "256"
+  },
+  "municipios_source": {
+    "source_type": "csv",
+    "path": "gs://${bucket_name}/${raw_prefix}/municipios.csv",
+    "options": {
+      "sep": ";",
+      "encoding": "iso-8859-1"
+    }
+  },
+  "uf_source": {
+    "source_type": "csv",
+    "path": "gs://${bucket_name}/${raw_prefix}/uf.csv"
+  },
+  "queimadas_source": {
+    "source_type": "bigquery",
+    "table": "basedosdados.br_inpe_queimadas.microdados"
+  },
+  "sisam_source": {
+    "source_type": "bigquery",
+    "table": "basedosdados.br_inpe_sisam.microdados"
+  },
+  "dim_data_sink": {
+    "sink_type": "gcs_parquet",
+    "path": "gs://${bucket_name}/${curated_prefix}/dim_data",
+    "mode": "overwrite"
+  },
+  "dim_horarios_sink": {
+    "sink_type": "gcs_parquet",
+    "path": "gs://${bucket_name}/${curated_prefix}/dim_horarios",
+    "mode": "overwrite"
+  },
+  "dim_local_sink": {
+    "sink_type": "gcs_parquet",
+    "path": "gs://${bucket_name}/${curated_prefix}/dim_local",
+    "mode": "overwrite"
+  },
+  "fct_queimadas_sink": {
+    "sink_type": "gcs_parquet",
+    "path": "gs://${bucket_name}/${curated_prefix}/fct_queimadas",
+    "mode": "overwrite"
+  },
+  "fct_clima_sink": {
+    "sink_type": "gcs_parquet",
+    "path": "gs://${bucket_name}/${curated_prefix}/fct_clima",
+    "mode": "overwrite"
+  }
+}

@@ -1,0 +1,78 @@
+main:
+  params: [input]
+  steps:
+    - init:
+        assign:
+          - project: "${project_id}"
+          - location: "${region}"
+          - batch_prefix: "${batch_prefix}"
+          - runtime_version: "${runtime_version}"
+          - dataproc_service_account: "${dataproc_service_acct}"
+          - subnetwork_uri: "${subnetwork_uri}"
+          - staging_bucket: "${staging_bucket}"
+          - poll_interval: ${poll_interval_seconds}
+          - batch_suffix: $${text.substring(text.replace_all(uuid.generate(), "-", ""), 0, 8)}
+          - batch_id: $${batch_prefix + "-" + batch_suffix}
+          - submit_url: $${"https://dataproc.googleapis.com/v1/projects/" + project + "/locations/" + location + "/batches"}
+    - submit_batch:
+        call: http.post
+        args:
+          url: $${submit_url}
+          query:
+            batchId: $${batch_id}
+          auth:
+            type: OAuth2
+          body:
+            runtimeConfig:
+              version: "${runtime_version}"
+              properties:
+                spark.driver.cores: "8"
+                spark.driver.memory: "32g"
+                spark.executor.cores: "8"
+                spark.executor.memory: "32g"
+            pysparkBatch:
+              mainPythonFileUri: "${main_python_uri}"
+              pythonFileUris:
+%{ for uri in py_file_uris ~}
+                - "${uri}"
+%{ endfor ~}
+              jarFileUris:
+%{ for uri in jar_file_uris ~}
+                - "${uri}"
+%{ endfor ~}
+              args:
+%{ for arg in args ~}
+                - "${arg}"
+%{ endfor ~}
+            environmentConfig:
+              executionConfig:
+                serviceAccount: "${dataproc_service_acct}"
+                subnetworkUri: "${subnetwork_uri}"
+        result: submit_response
+    - fetch_status:
+        call: http.get
+        args:
+          url: $${submit_url + "/" + batch_id}
+          auth:
+            type: OAuth2
+        result: current_batch
+    - check_status:
+        switch:
+          - condition: $${current_batch.body.state == "SUCCEEDED"}
+            next: succeeded
+          - condition: $${current_batch.body.state == "FAILED"}
+            next: failed
+          - condition: $${current_batch.body.state == "CANCELLED"}
+            next: cancelled
+        next: wait_and_retry
+    - wait_and_retry:
+        call: sys.sleep
+        args:
+          seconds: $${poll_interval}
+        next: fetch_status
+    - succeeded:
+        return: '$${current_batch.body}'
+    - failed:
+        raise: '$${"Dataproc batch failed: " + json.encode(default(map.get(current_batch.body, "stateHistory"), "Unknown error"))}'
+    - cancelled:
+        raise: '$${"Dataproc batch cancelled"}'

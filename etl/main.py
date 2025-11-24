@@ -13,36 +13,69 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 def create_spark_session(app_name: str = "Wildfire ETL") -> SparkSession:
-    # Java 17+ (and especially Java 24) requires these flags for Spark to work correctly
-    jvm_options = (
-        "--add-opens=java.base/java.lang=ALL-UNNAMED "
-        "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED "
-        "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED "
-        "--add-opens=java.base/java.io=ALL-UNNAMED "
-        "--add-opens=java.base/java.net=ALL-UNNAMED "
-        "--add-opens=java.base/java.nio=ALL-UNNAMED "
-        "--add-opens=java.base/java.util=ALL-UNNAMED "
-        "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED "
-        "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED "
-        "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED "
-        "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED "
-        "--add-opens=java.base/sun.security.action=ALL-UNNAMED "
-        "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED "
-        "--add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED"
-    )
+    # Check if we're running on Dataproc (which provides a pre-configured Spark session)
+    is_dataproc = os.environ.get("DATAPROC_VERSION") is not None or \
+                  os.environ.get("SPARK_HOME", "").startswith("/usr/lib/spark")
+    
+    if is_dataproc:
+        # On Dataproc, get the existing session or create one with minimal config
+        # Dataproc already provides GCS, BigQuery, and other connectors
+        logger.info("Running on Dataproc - using pre-configured Spark session")
+        builder = SparkSession.builder.appName(app_name)
+        
+        # Ensure GCS connector is configured for Dataproc
+        builder = builder.config("spark.hadoop.fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem") \
+                         .config("spark.hadoop.fs.AbstractFileSystem.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS")
 
-    return SparkSession.builder \
-        .appName(app_name) \
-        .config("spark.driver.extraJavaOptions", jvm_options) \
-        .config("spark.executor.extraJavaOptions", jvm_options) \
-        .config("spark.driver.memory", "8g") \
-        .config("spark.executor.memory", "8g") \
-        .config("spark.memory.offHeap.enabled", "true") \
-        .config("spark.memory.offHeap.size", "2g") \
-        .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0,org.postgresql:postgresql:42.7.3") \
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
-        .getOrCreate()
+        spark = builder.getOrCreate()
+
+        # If provided, add JDBC jars dynamically so they're visible to the driver/gateway
+        try:
+            jdbc_jars = spark.conf.get("wildfire.jdbc.jars", None)
+            if jdbc_jars:
+                sc = spark.sparkContext
+                for uri in jdbc_jars.split(","):
+                    uri = uri.strip()
+                    if uri:
+                        logger.info(f"Adding JDBC jar dynamically: {uri}")
+                        sc._jsc.addJar(uri)
+        except Exception as e:
+            logger.warning(f"Failed to add JDBC jars dynamically: {e}")
+
+        return spark
+    else:
+        # Local development environment - full configuration
+        logger.info("Running in local mode - configuring Spark session")
+        # Java 17+ (and especially Java 24) requires these flags for Spark to work correctly
+        jvm_options = (
+            "--add-opens=java.base/java.lang=ALL-UNNAMED "
+            "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED "
+            "--add-opens=java.base/java.lang.reflect=ALL-UNNAMED "
+            "--add-opens=java.base/java.io=ALL-UNNAMED "
+            "--add-opens=java.base/java.net=ALL-UNNAMED "
+            "--add-opens=java.base/java.nio=ALL-UNNAMED "
+            "--add-opens=java.base/java.util=ALL-UNNAMED "
+            "--add-opens=java.base/java.util.concurrent=ALL-UNNAMED "
+            "--add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED "
+            "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED "
+            "--add-opens=java.base/sun.nio.cs=ALL-UNNAMED "
+            "--add-opens=java.base/sun.security.action=ALL-UNNAMED "
+            "--add-opens=java.base/sun.util.calendar=ALL-UNNAMED "
+            "--add-opens=java.security.jgss/sun.security.krb5=ALL-UNNAMED"
+        )
+
+        return SparkSession.builder \
+            .appName(app_name) \
+            .config("spark.driver.extraJavaOptions", jvm_options) \
+            .config("spark.executor.extraJavaOptions", jvm_options) \
+            .config("spark.driver.memory", "8g") \
+            .config("spark.executor.memory", "8g") \
+            .config("spark.memory.offHeap.enabled", "true") \
+            .config("spark.memory.offHeap.size", "2g") \
+            .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0,org.postgresql:postgresql:42.7.3") \
+            .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
+            .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
+            .getOrCreate()
 
 def get_default_config() -> ETLConfig:
     return ETLConfig(
@@ -170,15 +203,47 @@ def main():
     parser.add_argument("--config", type=str, help="Path to configuration JSON file", default="config.json")
     args = parser.parse_args()
 
-    if args.config and os.path.exists(args.config):
-        logger.info(f"Loading configuration from {args.config}")
-        with open(args.config, 'r') as f:
-            config_dict = json.load(f)
-            config = ETLConfig.from_dict(config_dict)
+    logger.info(f"Configuration file path: {args.config}")
+    
+    if args.config:
+        # Support both local files and GCS paths
+        if args.config.startswith("gs://"):
+            logger.info(f"Loading configuration from GCS: {args.config}")
+            try:
+                from google.cloud import storage
+                
+                # Parse GCS path: gs://bucket/path/to/file
+                gcs_path = args.config.replace("gs://", "")
+                bucket_name = gcs_path.split("/")[0]
+                blob_path = "/".join(gcs_path.split("/")[1:])
+                
+                logger.info(f"GCS bucket: {bucket_name}, blob: {blob_path}")
+                
+                # Download config from GCS
+                client = storage.Client()
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_path)
+                config_content = blob.download_as_text()
+                
+                config_dict = json.loads(config_content)
+                config = ETLConfig.from_dict(config_dict)
+            except Exception as e:
+                logger.error(f"Failed to load config from GCS: {str(e)}")
+                logger.warning("Falling back to default configuration.")
+                config = get_default_config()
+        elif os.path.exists(args.config):
+            logger.info(f"Loading configuration from local file: {args.config}")
+            with open(args.config, 'r') as f:
+                config_dict = json.load(f)
+                config = ETLConfig.from_dict(config_dict)
+        else:
+            logger.warning(f"Configuration file not found: {args.config}. Using default configuration.")
+            config = get_default_config()
     else:
-        logger.info("Using default configuration.")
+        logger.info("No configuration file specified. Using default configuration.")
         config = get_default_config()
     
+    logger.info(f"ETL Configuration loaded: {config.spark_config.get('spark.app.name', 'Wildfire ETL')}")
     run_etl(config)
 
 if __name__ == "__main__":
