@@ -1,0 +1,45 @@
+{
+    "spark_config": {
+        "spark.app.name": "Wildfire ETL Local Parquet"
+    },
+    "municipios_source": {
+        "source_type": "csv",
+        "path": "data/municipios.csv",
+        "options": {
+            "sep": ";",
+            "encoding": "iso-8859-1"
+        }
+    },
+    "uf_source": {
+        "source_type": "csv",
+        "path": "data/uf.csv"
+    },
+    "queimadas_source": {
+        "source_type": "parquet",
+        "path": "data/queimadas-full.pqt.zstd"
+    },
+    "sisam_source": {
+        "source_type": "parquet",
+        "path": "data/sisam-full.pqt.zstd"
+    },
+    "dim_data_sink": {
+        "sink_type": "local_parquet",
+        "path": "dist/dim_data"
+    },
+    "dim_horarios_sink": {
+        "sink_type": "local_parquet",
+        "path": "dist/dim_horarios"
+    },
+    "dim_local_sink": {
+        "sink_type": "local_parquet",
+        "path": "dist/dim_local"
+    },
+    "fct_queimadas_sink": {
+        "sink_type": "local_parquet",
+        "path": "dist/fct_queimadas"
+    },
+    "fct_clima_sink": {
+        "sink_type": "local_parquet",
+        "path": "dist/fct_clima"
+    }
+}

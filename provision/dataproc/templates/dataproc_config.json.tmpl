@@ -1,0 +1,82 @@
+{
+  "spark_config": {
+    "spark.app.name": "Wildfire ETL - Dataproc",
+    "spark.sql.shuffle.partitions": "256",
+    "wildfire.jdbc.jars": "gs://${bucket_name}/libs/postgresql-42.7.3.jar"
+  },
+  "municipios_source": {
+    "source_type": "csv",
+    "path": "gs://${bucket_name}/${raw_prefix}/municipios.csv",
+    "options": {
+      "sep": ";",
+      "encoding": "iso-8859-1"
+    }
+  },
+  "uf_source": {
+    "source_type": "csv",
+    "path": "gs://${bucket_name}/${raw_prefix}/uf.csv"
+  },
+  "queimadas_source": {
+    "source_type": "parquet",
+    "path": "gs://${bucket_name}/${raw_prefix}/queimadas-full.pqt.zstd"
+  },
+  "sisam_source": {
+    "source_type": "parquet",
+    "path": "gs://${bucket_name}/${raw_prefix}/sisam-full.pqt.zstd"
+  },
+  "dim_data_sink": {
+    "sink_type": "postgres",
+    "jdbc_url": "jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}",
+    "table_name": "dim_data",
+    "mode": "overwrite",
+    "connection_properties": {
+      "user": "${postgres_user}",
+      "password": "${postgres_pass}",
+      "driver": "org.postgresql.Driver"
+    }
+  },
+  "dim_horarios_sink": {
+    "sink_type": "postgres",
+    "jdbc_url": "jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}",
+    "table_name": "dim_horario_queimada",
+    "mode": "overwrite",
+    "connection_properties": {
+      "user": "${postgres_user}",
+      "password": "${postgres_pass}",
+      "driver": "org.postgresql.Driver"
+    }
+  },
+  "dim_local_sink": {
+    "sink_type": "postgres",
+    "jdbc_url": "jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}",
+    "table_name": "dim_local_queimada",
+    "mode": "overwrite",
+    "connection_properties": {
+      "user": "${postgres_user}",
+      "password": "${postgres_pass}",
+      "driver": "org.postgresql.Driver"
+    }
+  },
+  "fct_queimadas_sink": {
+    "sink_type": "postgres",
+    "jdbc_url": "jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}",
+    "table_name": "fct_queimada",
+    "mode": "overwrite",
+    "connection_properties": {
+      "user": "${postgres_user}",
+      "password": "${postgres_pass}",
+      "driver": "org.postgresql.Driver"
+    }
+  },
+  "fct_clima_sink": {
+    "sink_type": "postgres",
+    "jdbc_url": "jdbc:postgresql://${postgres_host}:${postgres_port}/${postgres_db}",
+    "table_name": "fct_clima",
+    "mode": "overwrite",
+    "connection_properties": {
+      "user": "${postgres_user}",
+      "password": "${postgres_pass}",
+      "driver": "org.postgresql.Driver"
+    }
+  }
+}
