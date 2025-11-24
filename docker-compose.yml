@@ -1,0 +1,25 @@
+name: wildfire-olap
+services:
+  postgres:
+    image: postgres:17
+    shm_size: 1gb
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      POSTGRES_USER: wildfire
+      POSTGRES_PASSWORD: wildfire
+      PGDATA: /data/postgres
+      POSTGRES_DB: wildfire
+    
+    volumes:
+      - postgres:/data/postgres
+      - ./config/postgres.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5332:5432"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+volumes:
+  postgres:

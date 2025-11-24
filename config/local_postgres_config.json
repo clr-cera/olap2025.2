@@ -1,0 +1,80 @@
+{
+    "spark_config": {
+        "spark.app.name": "Wildfire ETL - Local Postgres"
+    },
+    "municipios_source": {
+        "source_type": "csv",
+        "path": "data/municipios.csv",
+        "options": {
+            "sep": ";",
+            "encoding": "iso-8859-1"
+        }
+    },
+    "uf_source": {
+        "source_type": "csv",
+        "path": "data/uf.csv"
+    },
+    "queimadas_source": {
+        "source_type": "parquet",
+        "path": "data/queimadas-full.pqt.zstd"
+    },
+    "sisam_source": {
+        "source_type": "parquet",
+        "path": "data/sisam-full.pqt.zstd"
+    },
+    "dim_data_sink": {
+        "sink_type": "postgres",
+        "jdbc_url": "jdbc:postgresql://localhost:5332/wildfire",
+        "table_name": "dim_data",
+        "mode": "overwrite",
+        "connection_properties": {
+            "user": "wildfire",
+            "password": "wildfire",
+            "driver": "org.postgresql.Driver"
+        }
+    },
+    "dim_horarios_sink": {
+        "sink_type": "postgres",
+        "jdbc_url": "jdbc:postgresql://localhost:5332/wildfire",
+        "table_name": "dim_horario_queimada",
+        "mode": "overwrite",
+        "connection_properties": {
+            "user": "wildfire",
+            "password": "wildfire",
+            "driver": "org.postgresql.Driver"
+        }
+    },
+    "dim_local_sink": {
+        "sink_type": "postgres",
+        "jdbc_url": "jdbc:postgresql://localhost:5332/wildfire",
+        "table_name": "dim_local_queimada",
+        "mode": "overwrite",
+        "connection_properties": {
+            "user": "wildfire",
+            "password": "wildfire",
+            "driver": "org.postgresql.Driver"
+        }
+    },
+    "fct_queimadas_sink": {
+        "sink_type": "postgres",
+        "jdbc_url": "jdbc:postgresql://localhost:5332/wildfire",
+        "table_name": "fct_queimada",
+        "mode": "overwrite",
+        "connection_properties": {
+            "user": "wildfire",
+            "password": "wildfire",
+            "driver": "org.postgresql.Driver"
+        }
+    },
+    "fct_clima_sink": {
+        "sink_type": "postgres",
+        "jdbc_url": "jdbc:postgresql://localhost:5332/wildfire",
+        "table_name": "fct_clima",
+        "mode": "overwrite",
+        "connection_properties": {
+            "user": "wildfire",
+            "password": "wildfire",
+            "driver": "org.postgresql.Driver"
+        }
+    }
+}
