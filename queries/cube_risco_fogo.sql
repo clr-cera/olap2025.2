@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW cube_bioma_risco_fogo AS
 SELECT
     dd.ano,
     dlq.bioma,

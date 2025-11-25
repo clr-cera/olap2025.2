@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW drill_across_umidade_potencia AS
 WITH joined_clima AS
     (SELECT
          dlc.regiao_uf,

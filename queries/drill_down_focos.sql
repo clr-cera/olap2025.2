@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW drilldown_count_local AS
 SELECT
     dim_local_queimada.nome_uf,
     dim_local_queimada.nome_municipio,

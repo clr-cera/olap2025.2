@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW rollup_avg_precipitacao AS
 SELECT
     dd.ano,
     dd.mes,

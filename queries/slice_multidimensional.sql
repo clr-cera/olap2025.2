@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW slice_seca_norte_clima AS
 SELECT
     dd.dia,
     dlc.nome_municipio,

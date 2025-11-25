@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW slice_precipitacao_estado_mes_setembro AS
 SELECT
     dd.mes,
     dlc.nome_uf,

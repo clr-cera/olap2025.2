@@ -1,3 +1,4 @@
+CREATE OR REPLACE VIEW drill_across_horario AS
 WITH joined_clima AS
          (SELECT
               dlc.nome_municipio,
