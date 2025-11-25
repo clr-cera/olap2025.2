@@ -18,3 +18,12 @@ resource "google_sql_user" "wildfire" {
 
   depends_on = [google_sql_database.wildfire]
 }
+
+data "google_alloydb_cluster" "alloy" {
+  cluster_id = "usp-olap-wildfire-alloy"
+}
+
+data "google_alloydb_instance" "primary" {
+  cluster_id = data.google_alloydb_cluster.alloy.cluster_id
+  instance_id = "primary"
+}

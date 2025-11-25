@@ -9,12 +9,13 @@ locals {
   dataproc_jar_file_uris   = ["gs://${local.etl_bucket_name}/libs/postgresql-42.7.3.jar"]
   dataproc_config_uri      = "gs://${local.etl_bucket_name}/configs/dataproc_config.json"
   dataproc_args            = ["--config", local.dataproc_config_uri]
+  postgres_host = "10.158.15.204"
 
   dataproc_config_content = templatefile("${path.module}/templates/dataproc_config.json.tmpl", {
     bucket_name    = local.etl_bucket_name,
     raw_prefix     = var.etl_raw_prefix,
     curated_prefix = var.etl_curated_prefix,
-    postgres_host  = data.google_sql_database_instance.main.private_ip_address,
+    postgres_host  = local.postgres_host,
     postgres_port  = var.db_port,
     postgres_db    = var.db_name,
     postgres_user  = var.db_user,
@@ -38,7 +39,7 @@ locals {
     bucket_name    = local.etl_bucket_name,
     raw_prefix     = var.etl_raw_prefix,
     project_id     = var.gcp_project_id,
-    postgres_host  = data.google_sql_database_instance.main.private_ip_address,
+    postgres_host  = local.postgres_host,
     postgres_port  = var.db_port,
     postgres_db    = var.db_name,
     postgres_user  = var.db_user,
