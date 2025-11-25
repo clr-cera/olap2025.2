@@ -1,0 +1,82 @@
+flowchart BT
+    %% ===============================
+    %% Dimensões Conformadas
+    %% ===============================
+    subgraph Conformed["Dimensões Conformadas"]
+        dim_data["
+            <b>dim_data</b>
+            <hr>
+            id (PK)
+            ano
+            semestre
+            trimestre
+            mes
+            dia
+            dia_da_semana
+            dia_do_ano
+            numero_semana
+            fim_de_semana
+            estacao
+        "]
+
+        dim_local["
+            <b>dim_local</b>
+            <hr>
+            id (PK)
+            municipio
+            estado
+            regiao
+        "]
+
+        dim_horario["
+            <b>dim_horario</b>
+            <hr>
+            id (PK)
+            hora
+            minuto
+        "]
+    end
+
+    %% ===============================
+    %% Dimensão Específica Queimadas
+    %% ===============================
+    subgraph Specific["Dimensão Específica"]
+        dim_ponto["
+            <b>dim_ponto</b>
+            <hr>
+            id (PK)
+            local_fk (FK)
+            latitude
+            longitude
+            bioma
+        "]
+    end
+
+    %% ===============================
+    %% Esquema_Queimadas
+    %% ===============================
+    subgraph Queimadas["Esquema Queimadas"]
+        fct_queimada["
+            <b>fct_queimada</b>
+            <hr>
+            data_fk (PK, FK)
+            ponto_fk (PK, FK)
+            horario_fk (PK, FK)
+            <hr>
+            risco_fogo
+            potencia_radiativa_fogo
+            dias_sem_chuva
+        "]
+    end
+
+    %% ===============================
+    %% Relationships
+    %% ===============================
+
+    %% Dimensões Conformadas para Fato
+    dim_data -- data_fk --> fct_queimada
+    dim_horario -- horario_fk --> fct_queimada
+    
+    %% Dimensão Específica
+    dim_ponto -- ponto_fk --> fct_queimada
+    dim_local -- local_fk --> dim_ponto

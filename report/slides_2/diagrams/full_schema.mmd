@@ -1,0 +1,127 @@
+flowchart BT
+
+    subgraph Dimensoes_Comum["Dimensões em Comum"]
+        dim_data["
+            <b>dim_data</b>
+            <hr>
+            id_data (PK)
+            ano
+            mes
+            dia
+            semestre
+            trimestre
+            dia_semana
+            dia_ano
+            is_weekend
+            semana_ano
+            estacao
+        "]
+    end
+    %% ===============================
+    %% Esquema_Clima
+    %% ===============================
+    subgraph Clima["Esquema_Clima"]
+        dim_horario_clima["
+            <b>dim_horario_clima</b>
+            <hr>
+            id_horario (PK)
+            hora
+        "]
+
+
+        dim_local_clima["
+            <b>dim_local_clima</b>
+            <hr>
+            local_id (PK)
+            regiao_uf
+            sigla_uf
+            nome_uf
+            nome_municipio
+            id_municipio
+        "]
+
+        fct_clima["
+            <b>fct_clima</b>
+            <hr>
+            data_fk (PK, FK)
+            local_fk (PK, FK)
+            horario_fk (PK, FK)
+            <hr>
+            temperatura	
+            umidade_relativa	
+            vento_velocidade	
+            vento_direcao	
+            co_ppb	
+            no2_ppb	
+            o3_ppb	
+            pm25_ugm3
+            so2_ugm3	
+            precipitacao_dia
+        "]
+    end
+
+    %% ===============================
+    %% Esquema_Queimadas
+    %% ===============================
+    subgraph Queimadas["Esquema_Queimadas"]
+
+        fct_queimada["
+            <b>fct_queimada</b>
+            <hr>
+            data_fk (PK, FK)
+            local_fk (PK, FK)
+            hora_fk (PK, FK)
+            <hr>
+            risco_fogo
+            FRP
+            dias_sem_chuva
+            precipitacao
+        "]
+        dim_horario_queimada["
+            <b>dim_horario_queimada</b>
+            <hr>
+            id_horario (PK)
+            id_horario_clima (FK)
+            <hr>
+            hora
+            minuto
+        "]
+
+
+        dim_local_queimada["
+            <b>dim_local_queimada</b>
+            <hr>
+            id_local (PK)
+            local_clima_id (FK)
+            <hr>
+            regiao_uf
+            sigla_uf
+            nome_uf
+            nome_municipio
+            id_municipio
+            latitude
+            longitude
+            bioma
+        "]
+    end
+
+
+
+    %% ===============================
+    %% Relationships
+    %% ===============================
+
+    dim_data -- id_data --> fct_queimada
+    dim_data -- id_data --> fct_clima
+
+    %% Clima
+    dim_horario_clima -- horario_fk --> fct_clima
+    dim_local_clima -- local_fk --> fct_clima
+
+    %% Queimadas
+    dim_horario_queimada -- hora_fk --> fct_queimada
+    dim_local_queimada -- local_fk --> fct_queimada
+
+    %% Views connections
+    dim_horario_queimada -- id_horario_clima --> dim_horario_clima
+    dim_local_queimada -- local_clima_id --> dim_local_clima

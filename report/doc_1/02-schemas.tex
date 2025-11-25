@@ -1,0 +1,277 @@
+\section{Esquemas}
+
+Os fatos e dimensões foram organizados em uma constelação de fatos composta por 2 esquemas estrela: Queimadas, responsável por armazenar dados relativos à ocorrência de queimadas, e Clima, que armazena dados climáticos históricos. A integração entre os esquemas é realizada através de \textbf{dimensões conformadas} (conformed dimensions), que são compartilhadas entre os fatos, permitindo análises integradas e consistentes.
+
+\subsection{Dimensões Conformadas}
+
+Para integrar os esquemas Queimadas e Clima de forma consistente, foram criadas \textbf{dimensões conformadas} que são compartilhadas entre ambos os fatos. Esta abordagem permite análises cruzadas e drill-across entre os dois domínios de dados.
+
+\subsubsection{dim\_data}
+Dimensão temporal compartilhada por ambos os fatos:
+\begin{itemize}
+    \item \textbf{id}: long, chave primária (PK).
+    \item \textbf{ano}: int.
+    \item \textbf{semestre}: int.
+    \item \textbf{trimestre}: int.
+    \item \textbf{mês}: int.
+    \item \textbf{dia}: int.
+    \item \textbf{dia\_da\_semana}: int (1-7, onde 1=domingo).
+    \item \textbf{dia\_do\_ano}: int (1-366).
+    \item \textbf{numero\_semana}: int (1-53).
+    \item \textbf{fim\_de\_semana}: boolean.
+    \item \textbf{estacao}: string (Verão, Outono, Inverno, Primavera).
+    \item \textbf{Hierarquia}: dia \(\rightarrow\) mês \(\rightarrow\) trimestre \(\rightarrow\) semestre \(\rightarrow\) ano
+\end{itemize}
+
+\paragraph{Atributos Analíticos Adicionais}
+Os atributos \textit{dia\_da\_semana}, \textit{fim\_de\_semana}, \textit{numero\_semana}, \textit{dia\_do\_ano} e \textit{estacao} foram incluídos para facilitar análises específicas:
+\begin{itemize}
+    \item \textbf{Análises Sazonais}: O atributo \textit{estacao} permite estudos sobre padrões de queimadas e condições climáticas por estações do ano, fundamental para entender ciclos naturais de seca e chuvas.
+    \item \textbf{Análises Semanais}: \textit{dia\_da\_semana} e \textit{fim\_de\_semana} facilitam a identificação de padrões relacionados a atividades humanas, como queimadas controladas durante dias úteis.
+    \item \textbf{Análises de Períodos Específicos}: \textit{numero\_semana} e \textit{dia\_do\_ano} permitem comparações diretas entre períodos equivalentes de anos diferentes, essenciais para análises de tendências temporais.
+\end{itemize}
+
+\subsubsection{dim\_local}
+Dimensão geográfica conformada, no grão de \textbf{município}.
+\begin{itemize}
+    \item \textbf{id}: long, chave primária (PK).
+    \item \textbf{municipio}: string.
+    \item \textbf{estado}: string.
+    \item \textbf{região}: string.
+    \item \textbf{Hierarquia}: município \(\rightarrow\) estado \(\rightarrow\) região.
+\end{itemize}
+
+\subsubsection{dim\_ponto}
+Dimensão essencial para análise de queimadas por biomas e regiões geográficas específicas. Esta dimensão mantém o grão fino necessário para análises ecológicas e de conservação, permitindo estudos sobre padrões de queimadas em diferentes ecossistemas brasileiros.
+\begin{itemize}
+    \item \textbf{id}: long, chave primária (PK).
+    \item \textbf{local\_fk}: long, FK para \textit{dim\_local}.
+    \item \textbf{latitude}: float.
+    \item \textbf{longitude}: float.
+    \item \textbf{bioma}: string. Fundamental para análises por Amazônia, Cerrado, Mata Atlântica, etc.
+\end{itemize}
+
+Esta estrutura hierárquica (ponto \(\rightarrow\) município \(\rightarrow\) estado \(\rightarrow\) região) é fundamental para o domínio de queimadas, pois permite análises em múltiplas granularidades geográficas e por biomas. Enquanto o fato de clima opera no grão de município, o fato de queimadas requer granularidade mais fina para capturar a diversidade ecológica e espacial dos incêndios. Análises \textit{drill-across} são realizadas através do relacionamento hierárquico entre \textit{dim\_ponto} e \textit{dim\_local}.
+
+\subsection{Slowly Changing Dimensions (SCDs)}
+
+Embora as dimensões geográficas (\textit{dim\_local} e \textit{dim\_ponto}) possam, em teoria, sofrer alterações ao longo do tempo (como mudanças nos nomes de municípios, criação de novos municípios, ou alterações em limites geográficos), optamos por \textbf{não implementar SCDs} para essas dimensões neste projeto pelas seguintes razões:
+
+\subsubsection{Justificativa para Não Implementação de SCDs}
+\begin{itemize}
+    \item \textbf{Escopo do Projeto}: O foco principal está na análise de padrões de queimadas e correlações climáticas, onde mudanças geográficas administrativas não impactam significativamente os resultados analíticos.
+    
+    \item \textbf{Natureza dos Dados}: Os dados de queimadas são eventos pontuais no tempo e espaço. O que importa é a localização exata onde o evento ocorreu no momento específico, não mudanças administrativas posteriores.
+    
+    \item \textbf{Complexidade vs. Benefício}: A implementação de SCDs adicionaria complexidade significativa ao modelo sem fornecer valor analítico proporcional para os objetivos deste projeto.
+    
+    \item \textbf{Integridade Temporal dos Fatos}: Os fatos de queimadas sempre referenciam as características geográficas apropriadas ao momento em que o evento ocorreu, garantindo consistência temporal e precisão analítica.
+\end{itemize}
+
+\subsubsection{Abordagem Adotada}
+As dimensões geográficas mantêm seus valores conforme registrados no momento da ocorrência dos eventos. Esta abordagem:
+\begin{itemize}
+    \item Preserva a integridade histórica dos dados.
+    \item Mantém a simplicidade do modelo para consultas e análises.
+    \item Assegura que cada fato de queimada seja sempre analisado no contexto geográfico correto de quando ocorreu.
+    \item Facilita análises longitudinais sem a complexidade de versionamento dimensional.
+\end{itemize}
+
+\subsubsection{dim\_horario}
+Dimensão de horário compartilhada, com granularidade mínima de minuto:
+\begin{itemize}
+    \item \textbf{id}: long, chave primária (PK).
+    \item \textbf{hora}: int.
+    \item \textbf{minuto}: int.
+    \item \textbf{Hierarquia}: minuto \(\rightarrow\) hora
+\end{itemize}
+
+\subsection{Tabela Ponte (Bridge Table) para Tempo}
+
+Devido à diferença de granularidade temporal entre os fatos Queimadas (minuto) e Clima (hora), foi criada uma \textbf{tabela ponte} (\textit{bridge\_horario}) para facilitar consultas que relacionem os dois fatos no domínio temporal. A granularidade de minuto é essencial para queimadas, pois múltiplos focos de incêndio podem ocorrer no mesmo município dentro da mesma hora, e agregá-los resultaria em perda significativa de informações analíticas sobre a intensidade e distribuição temporal dos eventos.
+
+\subsubsection{bridge\_horario}
+\begin{itemize}
+    \item \textbf{horario\_minuto\_fk}: long, FK para dim\_horario (granularidade minuto).
+    \item \textbf{horario\_hora\_fk}: long, FK para dim\_horario (granularidade hora).
+\end{itemize}
+
+\subsubsection{Mecânica da Tabela Ponte}
+Esta tabela implementa um relacionamento \textbf{muitos-para-um (60:1)}, onde cada registro de hora em \textit{dim\_horario} se relaciona com exatamente 60 registros de minutos correspondentes. Por exemplo:
+\begin{itemize}
+    \item Hora 14:00 $\rightarrow$ Minutos 14:00, 14:01, 14:02, ..., 14:59
+    \item Hora 15:00 $\rightarrow$ Minutos 15:00, 15:01, 15:02, ..., 15:59
+\end{itemize}
+
+Esta estrutura permite três tipos de consultas temporais:
+\begin{enumerate}
+    \item \textbf{Análise granular de queimadas}: Consultas diretas em granularidade de minuto
+    \item \textbf{Análise climática}: Consultas em granularidade de hora
+    \item \textbf{Análise integrada (drill-across)}: Agregação de queimadas por hora para comparação com dados climáticos
+\end{enumerate}
+
+\subsubsection{Alternativas Arquiteturais Consideradas}
+\paragraph{Abordagem 1: Fato Único com Granularidade Mínima}
+Criar um único fato com granularidade de minuto forçaria a interpolação artificial de dados climáticos horários, introduzindo imprecisão e aumentando desnecessariamente o volume de dados em 60 vezes.
+
+\paragraph{Abordagem 2: Fato Único com Granularidade Máxima}
+Utilizar apenas granularidade de hora resultaria na perda de informações críticas sobre a distribuição temporal de queimadas, essencial para análises de intensidade e padrões de propagação.
+
+\paragraph{Abordagem 3: Dimensões Temporais Separadas}
+Manter dimensões temporais completamente separadas impediria consultas drill-across, eliminando a capacidade de correlacionar eventos climáticos e de queimadas.
+
+\paragraph{Justificativa da Solução Adotada}
+A tabela ponte oferece \textbf{flexibilidade máxima} mantendo a integridade dos dados originais. Permite agregações controladas quando necessário, preserva a granularidade natural de cada domínio, e facilita tanto análises especializadas quanto integradas.
+
+\subsection{Fato Queimadas}
+
+\subsubsection{Granularidade}
+A tabela de fatos Queimadas opera no grão de \textbf{um foco de incêndio detectado por satélite em um ponto geográfico específico (latitude, longitude), em um município, em uma data, em um minuto específico}. Cada registro representa uma detecção individual de foco de incêndio, com suas características de risco, potência radiativa e contexto de seca. A granularidade de minuto é essencial para preservar a distribuição temporal fina dos eventos de queimadas, permitindo análises de intensidade e padrões de propagação.
+
+\subsubsection{Fatos}
+\begin{itemize}
+    \item \textbf{risco\_fogo}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Representa uma medida de risco que deve ser calculada como média para manter representatividade estatística.
+    \end{itemize}
+    
+    \item \textbf{potencia\_radiativa\_fogo}: float, aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: SOMA
+        \item \textit{Agregação espacial}: SOMA
+        \item \textit{Justificativa}: Representa energia liberada em megawatts, que pode ser somada para obter energia total por período ou região.
+    \end{itemize}
+    
+    \item \textbf{dias\_sem\_chuva}: int, semi-aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MAX (para obter o período mais longo sem chuva)
+        \item \textit{Agregação espacial}: MÉDIA (para obter condição média da região)
+        \item \textit{Justificativa}: Temporalmente, o valor máximo indica o período crítico de seca; espacialmente, a média fornece condição representativa da região.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Dimensões}
+A tabela de fatos se conecta às seguintes dimensões conformadas:
+\begin{itemize}
+    \item \textbf{dim\_data}
+    \item \textbf{dim\_local}
+    \item \textbf{dim\_horario} (com granularidade de minuto)
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagrams/queimadas_schema.png}
+    \caption{Esquema Estrela para Queimadas}
+    \label{fig:queimadas_schema}
+\end{figure}
+
+\subsection{Fato Clima}
+
+\subsubsection{Granularidade}
+A tabela de fatos Clima opera no grão de \textbf{medições climáticas agregadas por município, por data, por hora}. Cada registro representa as condições climáticas médias observadas em um município durante uma hora específica, incluindo temperatura, precipitação, umidade, vento e qualidade do ar. A granularidade horária é apropriada para dados climáticos, pois representa a resolução temporal típica das estações meteorológicas e dos modelos climáticos, equilibrando precisão analítica com volume de dados.
+
+\subsubsection{Fatos}
+\begin{itemize}
+    \item \textbf{temperatura}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Temperatura é uma medida intensiva que deve ser calculada como média ponderada.
+    \end{itemize}
+    
+    \item \textbf{precipitacao}: float, semi-aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: SOMA (para precipitação acumulada no período)
+        \item \textit{Agregação espacial}: MÉDIA (para precipitação média da região)
+        \item \textit{Justificativa}: Temporalmente representa acumulação; espacialmente representa condição média regional.
+    \end{itemize}
+    
+    \item \textbf{umidade\_relativa}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Medida intensiva expressa em percentual, agregada por média.
+    \end{itemize}
+    
+    \item \textbf{vento\_velocidade}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Velocidade deve ser agregada por média para manter representatividade física.
+    \end{itemize}
+    
+    \item \textbf{vento\_direcao}: int, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MODA ou MÉDIA\_CIRCULAR
+        \item \textit{Agregação espacial}: MODA ou MÉDIA\_CIRCULAR
+        \item \textit{Justificativa}: Direção em graus azimutais requer agregação circular ou moda para manter significado físico.
+    \end{itemize}
+    
+    \item \textbf{co\_ppb}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Concentração de monóxido de carbono é medida intensiva, agregada por média para representar condições médias de qualidade do ar.
+    \end{itemize}
+    
+    \item \textbf{no2\_ppb}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Concentração de dióxido de nitrogênio é medida intensiva, agregada por média para análises de qualidade do ar.
+    \end{itemize}
+    
+    \item \textbf{o3\_ppb}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Concentração de ozônio é medida intensiva, crucial para análises de qualidade do ar e correlações com queimadas.
+    \end{itemize}
+    
+    \item \textbf{pm25\_ugm3}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Material particulado fino (PM2.5) é indicador crítico de qualidade do ar, especialmente relevante em áreas com queimadas.
+    \end{itemize}
+    
+    \item \textbf{so2\_ugm3}: float, não aditivo.
+    \begin{itemize}
+        \item \textit{Agregação temporal}: MÉDIA
+        \item \textit{Agregação espacial}: MÉDIA
+        \item \textit{Justificativa}: Concentração de dióxido de enxofre é medida intensiva importante para análises de qualidade do ar e impactos ambientais.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Dimensões}
+A tabela de fatos se conecta às seguintes dimensões conformadas:
+\begin{itemize}
+    \item \textbf{dim\_data}
+    \item \textbf{dim\_local}
+    \item \textbf{dim\_horario} (com granularidade de hora, via \textit{bridge\_horario})
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{diagrams/clima_schema.png}
+    \caption{Esquema Estrela para Clima}
+    \label{fig:clima_schema}
+\end{figure}
+
+\subsection{Constelação de Fatos}
+
+A constelação final integra os dois fatos através das dimensões conformadas \textit{dim\_data} e \textit{dim\_local}, e utiliza a tabela ponte \textit{bridge\_horario} para resolver a diferença de granularidade temporal. Esta arquitetura permite análises como:
+\begin{itemize}
+    \item Correlação entre condições climáticas e ocorrência de queimadas por município e período.
+    \item Análise temporal em múltiplas granularidades (minuto, hora, dia, mês, etc.).
+    \item Drill-across entre fatos para análises integradas de clima e queimadas.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{diagrams/full_schema.png}
+    \caption{Constelação de Fatos com Dimensões Conformadas e Tabela Ponte}
+    \label{fig:full_schema}
+\end{figure}

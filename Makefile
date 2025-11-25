@@ -1,4 +1,4 @@
-.PHONY: clean package test-etl test-quality run-local
+.PHONY: clean package test-etl test-quality run-local slides
 
 clean:
 	rm -rf dist/

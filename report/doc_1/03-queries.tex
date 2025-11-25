@@ -1,0 +1,35 @@
+\section{Consultas}
+
+A seguir, são apresentados exemplos de operações OLAP que podem ser executadas sobre a constelação de fatos para extrair insights analíticos. As consultas apresentadas são de alto nível, focando nos conceitos e hierarquias, sendo independentes de implementação específica.
+
+\subsection{Drill-Down com agregação de contagem}
+\textit{Visão: Número de Focos de Incêndio por Estado por Ano} \(\rightarrow\) \textit{Visão: Número de Focos de Incêndio por Município por Ano}.
+\subsubsection{Motivação} Após identificar Estados com maior incidência de focos de incêndio (contagem de registros na tabela de fatos Queimadas), o analista pode "descer" na hierarquia geográfica de \textit{dim\_local} (estado \(\rightarrow\) município) para avaliar quais municípios são os maiores contribuintes, permitindo o direcionamento de ações de fiscalização e prevenção.
+
+\subsection{Roll-Up com agregação de média}
+\textit{Visão: Média de Precipitação por Estado por Mês} \(\rightarrow\) \textit{Visão: Média de Precipitação por Região por Ano}.
+\subsubsection{Motivação} Agregar dados mensais para uma visão anual (mês \(\rightarrow\) ano na hierarquia de \textit{dim\_data}) e de estado para região (estado \(\rightarrow\) região na hierarquia de \textit{dim\_local}) permite a identificação de tendências macro, suavizando variações de curto prazo e revelando padrões climáticos de larga escala. A agregação de \textit{precipitacao} utiliza média espacial (conforme definido no esquema Clima).
+
+\subsection{Pivot}
+\textit{Visão: Total de Potência Radiativa por Estado por Mês} \(\rightarrow\) \textit{Visão: Total de Potência Radiativa por Mês por Estado}.
+\subsubsection{Motivação} A primeira visão facilita a análise da série temporal do impacto das queimadas para cada estado, utilizando a medida aditiva \textit{potencia\_radiativa\_fogo} do fato Queimadas. Ao "pivotar" a tabela (reorientando as dimensões \textit{dim\_local} e \textit{dim\_data}), a nova visão facilita a comparação do impacto entre os estados para um mesmo mês, identificando áreas críticas em cada período.
+
+\subsection{Slice com agregação de média espacial}
+\textit{Visão: Precipitação por Estado por Mês} \(\rightarrow\) \textit{Visão: Precipitação Média por Estado para o mês de Setembro}.
+\subsubsection{Motivação} Permite isolar um "pedaço" do cubo de dados para análise focada. Neste caso, seleciona-se o mês de Setembro através de \textit{dim\_data} (tipicamente um mês crítico de seca) para analisar a precipitação média espacial (conforme agregação definida no fato Clima) em cada estado, auxiliando no planejamento de ações preventivas. Esta operação utiliza as dimensões conformadas para filtrar o período de interesse.
+
+\subsection{Drill-Down com análise hierárquica por bioma}
+\textit{Visão: Média de Risco de Fogo por Estado por Ano} \(\rightarrow\) \textit{Visão: Média de Risco de Fogo por Município por Bioma por Ano}.
+\subsubsection{Motivação} Demonstra a utilização da hierarquia geográfica especializada do fato Queimadas: através de \textit{dim\_ponto}, que mantém informações de bioma e se relaciona hierarquicamente com \textit{dim\_local}. Esta consulta permite descer do nível de estado para município, adicionando a dimensão de bioma, revelando que municípios específicos podem apresentar riscos distintos em diferentes ecossistemas (Amazônia, Cerrado, etc.). A medida \textit{risco\_fogo} utiliza agregação por média, conforme definido no esquema. Esta análise é essencial para políticas de conservação direcionadas por tipo de bioma.
+
+\subsection{Slice multi-dimensional com qualidade do ar}
+\textit{Visão: Concentrações Médias de PM2.5, CO e O3 por Município por Dia} \(\rightarrow\) \textit{Visão: Concentrações Médias de PM2.5, CO e O3 para Municípios da Região Norte durante a Estação de Seca (Julho-Setembro)}.
+\subsubsection{Motivação} Demonstra uma operação de slice em múltiplas dimensões do fato Clima, isolando região geográfica específica através de \textit{dim\_local} e período sazonal através de \textit{dim\_data} (utilizando os atributos analíticos de estação e mês). As medidas de qualidade do ar (\textit{pm25\_ugm3}, \textit{co\_ppb}, \textit{o3\_ppb}) são não-aditivas e agregadas por média. Esta análise é crítica para avaliar impactos ambientais e de saúde pública em períodos de maior incidência de queimadas, permitindo comparações entre diferentes poluentes atmosféricos simultaneamente.
+
+\subsection{Drill-Across com agregação de média}
+\textit{Visão: Média de Umidade Relativa por Região por Trimestre} + \textit{Visão: Média de Potência Radiativa por Região por Trimestre} \(\rightarrow\) \textit{Visão: Média de Umidade Relativa e Média de Potência Radiativa por Região por Trimestre}.
+\subsubsection{Motivação} Permite a análise de correlação entre métricas de diferentes tabelas de fato (Clima e Queimadas) através das \textbf{dimensões conformadas} \textit{dim\_local} e \textit{dim\_data}. As medidas \textit{umidade\_relativa} (fato Clima) e \textit{potencia\_radiativa\_fogo} (fato Queimadas) podem ser agregadas simultaneamente utilizando a hierarquia região de \textit{dim\_local} e trimestre de \textit{dim\_data}. A \textit{bridge\_horario} permite integrar dados de diferentes granularidades temporais (hora para Clima, minuto para Queimadas) ao agregar para níveis superiores. Esta consulta é fundamental para validar hipóteses, como a de que trimestres com menor umidade relativa apresentam incêndios com maior potência radiativa.
+
+\subsection{Análise de Pico de Queimadas por Hora usando Bridge Table}
+\textit{Visão: Contagem de Focos de Incêndio por Município por Hora} com correlação \textit{Temperatura e PM2.5 Médias por Município por Hora}.
+\subsubsection{Motivação} Esta consulta demonstra explicitamente o uso da \textbf{tabela ponte} (\textit{bridge\_horario}) para integrar eventos de queimadas (granularidade de minuto) com dados climáticos (granularidade de hora). A tabela ponte realiza o mapeamento \textbf{60:1} entre minutos e horas, permitindo agregar múltiplos focos de incêndio detectados em diferentes minutos da mesma hora. Por exemplo, se um município teve focos detectados às 14:23, 14:37 e 14:54, a \textit{bridge\_horario} permite agregar esses três eventos (via \textit{horario\_minuto\_fk}) para a hora 14:00 (via \textit{horario\_hora\_fk}), possibilitando a contagem total de focos por hora e sua correlação com as condições climáticas médias dessa hora (temperatura e concentração de PM2.5). Esta análise é essencial para identificar padrões temporais de intensificação de queimadas e seus impactos imediatos na qualidade do ar, revelando, por exemplo, que determinadas horas do dia apresentam maior concentração de focos e consequentemente piores níveis de poluição atmosférica.

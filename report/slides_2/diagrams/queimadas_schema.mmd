@@ -1,0 +1,64 @@
+flowchart BT
+    %% ===============================
+    %% Esquema_Queimadas
+    %% ===============================
+    subgraph Queimadas["Esquema_Queimadas"]
+        dim_horarios_queimada["
+            <b>dim_horarios_queimada</b>
+            <hr>
+            id (PK)
+            hora
+            minuto
+        "]
+
+        dim_data_queimada["
+            <b>dim_data_queimada</b>
+            <hr>
+            id (PK)
+            ano
+            mes
+            dia
+            semestre
+            trimestre
+            dia_semana
+            dia_ano
+            is_weekend
+            semana_ano
+            estacao
+        "]
+
+        dim_local_queimada["
+            <b>dim_local_queimada</b>
+            <hr>
+            local_id (PK)
+            regiao_uf
+            sigla_uf
+            nome_uf
+            nome_municipio
+            id_municipio
+            latitude
+            longitude
+            bioma
+        "]
+
+        fct_queimada["
+            <b>fct_queimada</b>
+            <hr>
+            data_fk (PK, FK)
+            local_fk (PK, FK)
+            hora_fk (PK, FK)
+            <hr>
+            risco_fogo
+            FRP
+            dias_sem_chuva
+        "]
+    end
+
+    %% ===============================
+    %% Relationships
+    %% ===============================
+
+    %% Queimadas
+    dim_horarios_queimada -- hora_fk --> fct_queimada
+    dim_data_queimada -- data_fk --> fct_queimada
+    dim_local_queimada -- local_fk --> fct_queimada

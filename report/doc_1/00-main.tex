@@ -1,0 +1,103 @@
+\documentclass[11pt,oneside,a4paper,article,brazil,chapter=title]{abntex2}
+\usepackage[top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{svg}
+\usepackage{float}
+\usepackage{csquotes}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{indentfirst}
+\usepackage{url}
+\usepackage[alf,num]{abntex2cite}
+\usepackage{pdflscape}
+\usepackage{caption}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=magenta,
+  urlcolor=magenta
+}
+
+\renewcommand\brazilhyphenmins{22}
+
+\titulo{
+  Primeiro Trabalho Prático\\
+  \vspace{8pt}
+  As Cinzas do Brasil \\
+  \small{Análise dos dados brasileiros de queimadas}
+}
+\author{
+  Clara Ernesto de Carvalho \; \textit{14559479}\\
+  Felipe Carneiro Machado \; \textit{14569373}\\
+  Lívia Lelis \; \textit{12543822}
+}
+\data{10/2025}
+\instituicao{Universidade de São Paulo - USP}
+\newcommand{\departamento}{Departamento de Computação}
+\newcommand{\edc}{Instituto De Ciências Matemáticas e de Computação - ICMC}
+\local{São Carlos - SP}
+\newcommand{\tipo}{SCC0245 - Processamento Analítico de Dados}
+
+\renewcommand{\imprimircapa}{
+  \begin{center}
+
+    {\ABNTEXchapterfont\LARGE\MakeUppercase\imprimirinstituicao} \par
+    {\ABNTEXchapterfont\large\uppercase{\edc}}
+
+    {\noindent\rule{\textwidth}{0.1pt}}
+
+    {\ABNTEXchapterfont\normalsize\tipo}
+    \begin{flushright}
+      Profa. Cristina Dutra de Aguiar
+    \end{flushright}
+    \vspace*{\fill}
+
+    \vspace*{\fill}
+    {\ABNTEXchapterfont\bfseries\LARGE\imprimirtitulo}
+    \vspace*{\fill}
+
+    \begin{flushright}
+      Clara Ernesto de Carvalho \; \textit{14559479}\\
+      Felipe Carneiro Machado \; \textit{14569373}\\
+      Lívia Lelis \; \textit{12543822}
+    \end{flushright}
+
+    \vspace*{\fill}
+    {\large\imprimirlocal} \par
+    {\large\imprimirdata}
+    \vspace*{1cm}
+
+  \end{center}
+}
+
+\begin{document}
+
+\selectlanguage{brazil}
+
+\imprimircapa
+\clearpage
+
+\pdfbookmark[0]{\contentsname}{toc}
+
+\tableofcontents*
+\cleardoublepage
+
+\textual
+
+\input{01-descricao}
+
+\input{02-schemas}
+
+\input{03-queries}
+
+\input{04-referencias}
+
+\postextual
+
+\end{document}

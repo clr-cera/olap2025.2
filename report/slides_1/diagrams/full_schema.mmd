@@ -1,0 +1,128 @@
+flowchart BT
+    %% ===============================
+    %% Dimensões Conformadas
+    %% ===============================
+    subgraph Conformed["Dimensões Conformadas"]
+        dim_data["
+            <b>dim_data</b>
+            <hr>
+            id (PK)
+            ano
+            semestre
+            trimestre
+            mes
+            dia
+            dia_da_semana
+            dia_do_ano
+            numero_semana
+            fim_de_semana
+            estacao
+        "]
+
+        dim_local["
+            <b>dim_local</b>
+            <hr>
+            id (PK)
+            municipio
+            estado
+            regiao
+        "]
+
+        dim_horario["
+            <b>dim_horario</b>
+            <hr>
+            id (PK)
+            hora
+            minuto
+        "]
+    end
+
+    %% ===============================
+    %% Dimensão Específica Queimadas
+    %% ===============================
+    subgraph Specific["Dimensão Específica"]
+        dim_ponto["
+            <b>dim_ponto</b>
+            <hr>
+            id (PK)
+            local_fk (FK)
+            latitude
+            longitude
+            bioma
+        "]
+    end
+
+    %% ===============================
+    %% Tabela Ponte
+    %% ===============================
+    subgraph Bridge["Tabela Ponte"]
+        bridge_horario["
+            <b>bridge_horario</b>
+            <hr>
+            horario_minuto_fk (FK)
+            horario_hora_fk (FK)
+        "]
+    end
+
+    %% ===============================
+    %% Esquema_Clima
+    %% ===============================
+    subgraph Clima["Esquema Clima"]
+        fct_clima["
+            <b>fct_clima</b>
+            <hr>
+            data_fk (PK, FK)
+            local_fk (PK, FK)
+            horario_fk (PK, FK)
+            <hr>
+            temperatura
+            precipitacao
+            umidade_relativa
+            vento_velocidade
+            vento_direcao
+            co_ppb
+            no2_ppb
+            o3_ppb
+            pm25_ugm3
+            so2_ugm3
+        "]
+    end
+
+    %% ===============================
+    %% Esquema_Queimadas
+    %% ===============================
+    subgraph Queimadas["Esquema Queimadas"]
+        fct_queimada["
+            <b>fct_queimada</b>
+            <hr>
+            data_fk (PK, FK)
+            ponto_fk (PK, FK)
+            horario_fk (PK, FK)
+            <hr>
+            risco_fogo
+            potencia_radiativa_fogo
+            dias_sem_chuva
+        "]
+    end
+
+    %% ===============================
+    %% Relationships
+    %% ===============================
+
+    %% Dimensões Conformadas para Fatos
+    dim_data -- data_fk --> fct_clima
+    dim_data -- data_fk --> fct_queimada
+    
+    dim_local -- local_fk --> fct_clima
+    dim_local -- local_fk --> dim_ponto
+    
+    %% Queimadas usa granularidade de minuto diretamente
+    dim_horario -- horario_fk --> fct_queimada
+    
+    %% Clima usa granularidade de hora via bridge table
+    dim_horario -- horario_hora_fk --> bridge_horario
+    dim_horario -- horario_minuto_fk --> bridge_horario
+    bridge_horario -- horario_fk --> fct_clima
+    
+    %% Dimensão específica de queimadas
+    dim_ponto -- ponto_fk --> fct_queimada

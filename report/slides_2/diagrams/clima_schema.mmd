@@ -1,0 +1,63 @@
+flowchart BT
+    %% ===============================
+    %% Esquema_Clima
+    %% ===============================
+    subgraph Clima["Esquema_Clima"]
+        dim_horario_clima["
+            <b>dim_horario_clima</b>
+            <hr>
+            id (PK)
+            hora
+        "]
+
+        dim_data_clima["
+            <b>dim_data_clima</b>
+            <hr>
+            id (PK)
+            ano
+            mes
+            dia
+            semestre
+            trimestre
+            dia_semana
+            dia_ano
+            is_weekend
+            semana_ano
+            estacao
+        "]
+
+        dim_local_clima["
+            <b>dim_local_clima</b>
+            <hr>
+            local_id (PK)
+            regiao_uf
+            sigla_uf
+            nome_uf
+            nome_municipio
+            id_municipio
+        "]
+
+        fct_clima["
+            <b>fct_clima</b>
+            <hr>
+            data_fk (PK, FK)
+            local_fk (PK, FK)
+            horario_fk (PK, FK)
+            <hr>
+            temperatura
+            precipitacao
+            pressao
+            umidade_rel
+            vento_vel
+            radiacao
+        "]
+    end
+
+    %% ===============================
+    %% Relationships
+    %% ===============================
+
+    %% Clima
+    dim_horario_clima -- horario_fk --> fct_clima
+    dim_data_clima -- data_fk --> fct_clima
+    dim_local_clima -- local_fk --> fct_clima

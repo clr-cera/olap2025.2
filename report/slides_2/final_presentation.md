@@ -43,7 +43,7 @@ Constelação de fatos corrigida
 </ul>
 </div>
 <center>
-<img align="center" src="full_schema.png" width="400">
+<img align="center" src="diagrams/full_schema.png" width="400">
 </center>
 
 ---

@@ -1,0 +1,6 @@
+{
+  "html": true,
+  "math": "katex",
+  "pdfNotes": true,
+  "themeSet": "./themes"
+}

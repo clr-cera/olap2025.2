@@ -1,0 +1,349 @@
+\section{Descrição do Problema}
+
+O Brasil sofre com o volumoso problema que são as queimadas, segundo dados do Monitor do Fogo do projeto MapBiomas, mais de 30,8 milhões de hectares foram queimados no Brasil entre janeiro e dezembro de 2024, uma área maior que todo o território da Itália. \cite{mapbiomas_2025_area_queimada}
+
+Nesse contexto, o nosso foco é analisar os dados de queimada e clima informados pelo INPE, com o objetivo de encontrar correlações entre os dados, entender como eles se comportam em relação à localização geográfica, época do ano, e como se alteraram ao longo dos anos; e criar um data warehouse para facilitar essas consultas uma vez que possuímos um grande volume de dados.
+
+Nós usaremos dois datasets, o dataset do INPE de queimadas \cite{queimadas_inpe} e o de clima \cite{sisam_inpe}. Ambos possuem dados com localização espacial e temporal, o de clima possui dados desde 2000, e o de queimadas desde 2003. Devido à longa coleta de dados, ambos datasets são muito volumosos, sendo que o dataset de queimadas possui 17.542.900 tuplas, e o dataset de clima possui 158.705.816, totalizando em mais de 15GB. Além disso, precisaremos dos diretórios brasileiros de unidades federativas e municípios.
+
+\subsection{Fontes dos Dados}
+
+\subsubsection{Queimadas - INPE}
+
+A Tabela \ref{tab:queimadas_schema} apresenta o esquema do dataset de queimadas fornecido pelo INPE, contendo informações sobre focos de incêndio detectados por satélite.
+
+\begin{table}[H]
+\centering
+\caption{Esquema do Dataset de Queimadas - INPE}
+\label{tab:queimadas_schema}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{8cm}|}
+\hline
+\textbf{Atributo} & \textbf{Tipo} & \textbf{Modo} & \textbf{Descrição} \\ \hline
+ano & INTEGER & NULLABLE & Ano de referência da passagem do satélite segundo o fuso horário de Greenwich (GMT). \\ \hline
+mes & INTEGER & NULLABLE & Mês de referência da passagem do satélite segundo o fuso horário de Greenwich (GMT). \\ \hline
+data\_hora & DATETIME & NULLABLE & Data e hora da passagem do satélite no fuso horário de Greenwich (GMT). \\ \hline
+bioma & STRING & NULLABLE & Nome do Bioma. \\ \hline
+sigla\_uf & STRING & NULLABLE & Sigla da Unidade Federativa. \\ \hline
+id\_municipio & STRING & NULLABLE & Identificação do Município. \\ \hline
+latitude & FLOAT & NULLABLE & Latitude do centro do píxel de fogo ativo em graus decimais. \\ \hline
+longitude & FLOAT & NULLABLE & Longitude do centro do píxel de fogo ativo em graus decimais. \\ \hline
+satelite & STRING & NULLABLE & Nome do algoritmo utilizado e referência ao satélite provedor da imagem. \\ \hline
+dias\_sem\_chuva & FLOAT & NULLABLE & Número de dias sem chuva até a detecção do foco. \\ \hline
+precipitacao & FLOAT & NULLABLE & Precipitação acumulada no dia até o momento da detecção do fogo. \\ \hline
+risco\_fogo & FLOAT & NULLABLE & Valor do Risco de Fogo previsto para o dia da detecção do foco. \\ \hline
+potencia\_radiativa\_fogo & FLOAT & NULLABLE & Fire Radiative Power, MW (megawatts). \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Clima - SISAM/INPE}
+
+A Tabela \ref{tab:sisam_schema} apresenta o esquema do dataset de clima fornecido pelo Sistema de Informações Ambientais Integrado à Saúde Ambiental (SISAM) do INPE, contendo dados meteorológicos e de qualidade do ar.
+
+\begin{table}[H]
+\centering
+\caption{Esquema do Dataset de Clima - SISAM/INPE}
+\label{tab:sisam_schema}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{8cm}|}
+\hline
+\textbf{Atributo} & \textbf{Tipo} & \textbf{Modo} & \textbf{Descrição} \\ \hline
+ano & INTEGER & NULLABLE & Ano do registro. \\ \hline
+sigla\_uf & STRING & NULLABLE & Sigla da Unidade da Federação. \\ \hline
+id\_municipio & STRING & NULLABLE & ID do Município segundo classificação IBGE (7 dígitos). \\ \hline
+data\_hora & DATETIME & NULLABLE & Data e hora do registro meteorológico. \\ \hline
+co\_ppb & FLOAT & NULLABLE & Concentração de monóxido de carbono (CO) em partes por bilhão (ppb). \\ \hline
+no2\_ppb & FLOAT & NULLABLE & Concentração de dióxido de nitrogênio (NO$_2$) em partes por bilhão (ppb). \\ \hline
+o3\_ppb & FLOAT & NULLABLE & Concentração de ozônio (O$_3$) em partes por bilhão (ppb). \\ \hline
+pm25\_ugm3 & FLOAT & NULLABLE & Material particulado fino (PM2.5) em microgramas por metro cúbico ($\mu$g/m³). \\ \hline
+so2\_ugm3 & FLOAT & NULLABLE & Dióxido de enxofre (SO$_2$) em microgramas por metro cúbico ($\mu$g/m³). \\ \hline
+precipitacao\_dia & FLOAT & NULLABLE & Total de precipitação acumulada no momento do registro. \\ \hline
+temperatura & FLOAT & NULLABLE & Temperatura do ar (°C). \\ \hline
+umidade\_relativa & FLOAT & NULLABLE & Umidade relativa do ar (\%). \\ \hline
+vento\_direcao & INTEGER & NULLABLE & Direção do vento (graus azimutais). \\ \hline
+vento\_velocidade & FLOAT & NULLABLE & Velocidade do vento (m/s). \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Unidades Federativas - IBGE}
+
+A Tabela \ref{tab:uf_schema} apresenta o esquema do dataset de Unidades Federativas fornecido pelo IBGE, contendo informações sobre os estados brasileiros e suas regiões.
+
+\begin{table}[H]
+\centering
+\caption{Esquema do Dataset de Unidades Federativas - IBGE}
+\label{tab:uf_schema}
+\begin{tabular}{|l|l|l|p{8cm}|}
+\hline
+\textbf{Atributo} & \textbf{Tipo} & \textbf{Modo} & \textbf{Descrição} \\ \hline
+id\_uf & INTEGER & NOT NULL & Código identificador da Unidade da Federação (2 dígitos). \\ \hline
+sigla & STRING & NOT NULL & Sigla da Unidade da Federação. \\ \hline
+nome & STRING & NOT NULL & Nome completo da Unidade da Federação. \\ \hline
+regiao & STRING & NOT NULL & Nome da região geográfica (Norte, Nordeste, Centro-Oeste, Sudeste, Sul). \\ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Municípios - IBGE}
+
+A Tabela \ref{tab:municipio_schema} apresenta o esquema do dataset de Municípios fornecido pelo IBGE, contendo informações detalhadas sobre todos os municípios brasileiros, incluindo divisões administrativas e geográficas.
+
+\begin{table}[H]
+\centering
+\caption{Esquema do Dataset de Municípios - IBGE}
+\label{tab:municipio_schema}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{7cm}|}
+\hline
+\textbf{Atributo} & \textbf{Tipo} & \textbf{Modo} & \textbf{Descrição} \\ \hline
+id\_municipio & INTEGER & NOT NULL & Código identificador do município IBGE (7 dígitos). \\ \hline
+id\_municipio\_6 & INTEGER & NULLABLE & Código do município com 6 dígitos. \\ \hline
+id\_municipio\_tse & INTEGER & NULLABLE & Código do município no Tribunal Superior Eleitoral. \\ \hline
+id\_municipio\_rf & INTEGER & NULLABLE & Código do município na Receita Federal. \\ \hline
+id\_municipio\_bcb & INTEGER & NULLABLE & Código do município no Banco Central do Brasil. \\ \hline
+nome & STRING & NOT NULL & Nome do município. \\ \hline
+capital\_uf & INTEGER & NULLABLE & Indicador se o município é capital (1) ou não (0). \\ \hline
+id\_comarca & INTEGER & NULLABLE & Código identificador da comarca. \\ \hline
+id\_regiao\_saude & INTEGER & NULLABLE & Código da região de saúde. \\ \hline
+nome\_regiao\_saude & STRING & NULLABLE & Nome da região de saúde. \\ \hline
+id\_regiao\_imediata & INTEGER & NULLABLE & Código da região geográfica imediata. \\ \hline
+nome\_regiao\_imediata & STRING & NULLABLE & Nome da região geográfica imediata. \\ \hline
+id\_regiao\_intermediaria & INTEGER & NULLABLE & Código da região geográfica intermediária. \\ \hline
+nome\_regiao\_intermediaria & STRING & NULLABLE & Nome da região geográfica intermediária. \\ \hline
+id\_microrregiao & INTEGER & NULLABLE & Código da microrregião. \\ \hline
+nome\_microrregiao & STRING & NULLABLE & Nome da microrregião. \\ \hline
+id\_mesorregiao & INTEGER & NULLABLE & Código da mesorregião. \\ \hline
+nome\_mesorregiao & STRING & NULLABLE & Nome da mesorregião. \\ \hline
+id\_regiao\_metropolitana & STRING & NULLABLE & Lista de IDs de regiões metropolitanas (separados por vírgula). \\ \hline
+nome\_regiao\_metropolitana & STRING & NULLABLE & Lista de nomes de regiões metropolitanas (separados por vírgula). \\ \hline
+ddd & INTEGER & NULLABLE & Código DDD de telefonia. \\ \hline
+id\_uf & INTEGER & NOT NULL & Código da Unidade da Federação. \\ \hline
+sigla\_uf & STRING & NOT NULL & Sigla da Unidade da Federação. \\ \hline
+nome\_uf & STRING & NOT NULL & Nome da Unidade da Federação. \\ \hline
+nome\_regiao & STRING & NOT NULL & Nome da região geográfica. \\ \hline
+amazonia\_legal & INTEGER & NULLABLE & Indicador se pertence à Amazônia Legal (1) ou não (0). \\ \hline
+centroide & STRING & NULLABLE & Coordenadas geográficas do centroide do município. \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{Assuntos de Interesse}
+
+\subsubsection{FRP - Fire Radiative Power}
+
+Impacto da Queimada - Indica (em MW) a potência radiativa da queimada, relacionada com o quanto de material foi consumido, e portanto, o quanto que a queimada impactou. Ela pode ser analisada em relação aos locais em que ocorre, e ao tempo. A métrica (fato) observada é o FRP e a granularidade desta métrica está por minuto e local. As dimensões relacionadas são data, horário e local.
+
+\subsubsection{Dias sem Chuva}
+
+Analisar o impacto dos períodos de seca nas queimadas, e em quais locais ocorrem mais queimadas mesmo fora destes períodos. Além disso, correlacionar a duração destes períodos com o impacto da queimada (FRP). A métrica (fato) observada é a dias\_sem\_chuva e a granularidade desta métrica está por minuto e local. As dimensões relacionadas são data e local.
+
+\subsubsection{Umidade Relativa}
+
+Analisar umidade em relação ao local, data e horário para encontrar locais e momentos mais afetados por baixa umidade e correlacionar com o impacto da queimada (FRP). A métrica (fato) observada é a umidade\_relativa e a granularidade desta métrica está por hora e local. As dimensões relacionadas são data, horário e local.
+
+\subsubsection{Risco de Fogo}
+
+Analisar a previsão do risco de queimada em relação a local e data, e analisar se há correlação com o impacto das queimadas. (Se a previsão da ocorrência de queimadas se correlaciona com o impacto das queimadas existentes no mesmo período).
+
+A métrica (fato) observada é a risco\_fogo e a granularidade desta métrica está por minuto e local. As dimensões relacionadas são data e local.
+
+\subsection{Dimensões e Fatos}
+
+Para a modelagem do Data Warehouse, os dados serão organizados em uma \textbf{constelação de fatos}, composta por duas tabelas de fatos principais (Queimadas e Clima) e um conjunto de \textbf{dimensões conformadas}. As dimensões conformadas são compartilhadas entre as tabelas de fato, garantindo consistência e permitindo análises integradas (\textit{drill-across}).
+
+\subsubsection{Dimensões Conformadas}
+As dimensões que darão contexto aos fatos são:
+\begin{itemize}
+    \item \textbf{Dimensão de Tempo (Data e Horário)}: Para analisar os eventos ao longo do tempo, com granularidades que vão de minuto a ano. Uma vez que os fatos de Queimadas e Clima possuem granularidades temporais distintas (minuto e hora, respectivamente), será utilizada uma tabela ponte para compatibilizá-las.
+    \item \textbf{Dimensão de Localização}: Para análises geográficas, com hierarquias que vão desde coordenadas/municípios até regiões e biomas.
+\end{itemize}
+
+\subsubsection{Tabelas de Fato}
+As tabelas de fato conterão as métricas quantitativas dos eventos. A correta classificação da aditividade de cada fato é crucial para a análise.
+
+\paragraph{Fato Queimadas:}
+\begin{itemize}
+    \item \textbf{Potência Radiativa do Fogo (FRP)}: É um fato \textbf{aditivo}. A energia liberada pode ser somada através de qualquer dimensão (e.g., total de FRP para um estado em um mês).
+    \item \textbf{Dias sem Chuva}: É um fato \textbf{semi-aditivo}. Pode ser agregado por média entre locais, mas não é somável ao longo do tempo. Para análises temporais, utilizam-se funções como `MAX`, `MIN` ou a última medição.
+    \item \textbf{Risco de Fogo}: É um fato \textbf{não aditivo}. Não pode ser somado de forma útil. A agregação correta é a média para entender o risco em uma determinada região ou período.
+\end{itemize}
+
+\paragraph{Fato Clima:}
+\begin{itemize}
+    \item \textbf{Temperatura, Umidade Relativa, Velocidade do Vento}: São fatos \textbf{não aditivos}. A agregação deve ser feita por média.
+    \item \textbf{Precipitação}: É um fato \textbf{semi-aditivo}. A precipitação acumulada pode ser somada entre diferentes locais para um mesmo período, mas não ao longo do tempo.
+\end{itemize}
+
+\subsubsection{Processo de Integração}
+
+A estratégia de integração adotada consiste em:
+
+\begin{enumerate}
+    \item \textbf{Integração Direta por Chaves Naturais}: Os campos \texttt{id\_municipio} e \texttt{sigla\_uf} servem como chaves naturais para unificar os dados geográficos entre as fontes.
+    
+    \item \textbf{Enriquecimento com Dados IBGE}: Os diretórios de municípios e unidades federativas do IBGE são utilizados para enriquecer as dimensões conformadas com informações hierárquicas (região, mesorregião, microrregião).
+    
+    \item \textbf{Dimensões Conformadas}: A criação de dimensões conformadas (\texttt{dim\_data}, \texttt{dim\_local}, \texttt{dim\_horario}) garante consistência semântica entre os fatos de queimadas e clima.
+    
+    \item \textbf{Resolução de Granularidade Temporal}: Uma tabela ponte (\texttt{bridge\_horario}) resolve a diferença de granularidade entre minutos (queimadas) e horas (clima), permitindo análises drill-across.
+\end{enumerate}
+
+\subsubsection{Ausência de Conflitos Semânticos}
+
+Como todos os datasets originam-se de fontes oficiais brasileiras (INPE e IBGE) e seguem padrões governamentais de codificação, \textbf{não há necessidade de reconciliação semântica} ou resolução de conflitos. A integração é essencialmente uma operação de junção por chaves naturais, seguida de desnormalização controlada para o modelo dimensional.
+
+\subsection{Mapeamento de Atributos: Fonte para Data Warehouse}
+
+Esta seção documenta o mapeamento completo entre os atributos das fontes de dados e os elementos do Data Warehouse (dimensões e fatos).
+
+\subsubsection{Dimensão: dim\_data}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - dim\_data}
+\label{tab:mapping_dim_data}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+id & - & - & Chave surrogate gerada \\ \hline
+ano & Queimadas/Clima & ano & Extração direta \\ \hline
+semestre & Queimadas/Clima & data\_hora & Calculado: 1 (jan-jun) ou 2 (jul-dez) \\ \hline
+trimestre & Queimadas/Clima & data\_hora & Calculado: \texttt{ceil(mes/3)} \\ \hline
+mês & Queimadas/Clima & mes & Extração direta \\ \hline
+dia & Queimadas/Clima & data\_hora & Extração do dia do campo datetime \\ \hline
+dia\_da\_semana & Queimadas/Clima & data\_hora & Calculado (1=domingo, 7=sábado) \\ \hline
+dia\_do\_ano & Queimadas/Clima & data\_hora & Calculado (1-366) \\ \hline
+numero\_semana & Queimadas/Clima & data\_hora & Calculado (ISO week number) \\ \hline
+fim\_de\_semana & Queimadas/Clima & data\_hora & Calculado: \texttt{dia\_da\_semana IN (1,7)} \\ \hline
+estacao & Queimadas/Clima & data\_hora & Mapeamento por mês (hemisfério sul) \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Dimensão: dim\_local}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - dim\_local}
+\label{tab:mapping_dim_local}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+id & - & - & Chave surrogate gerada \\ \hline
+municipio & Municípios IBGE & nome & Extração direta \\ \hline
+estado & Municípios IBGE & nome\_uf & Extração direta \\ \hline
+região & Municípios IBGE & nome\_regiao & Extração direta \\ \hline
+\multicolumn{4}{|l|}{\textit{Chave Natural de Integração: id\_municipio (7 dígitos IBGE)}} \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Dimensão: dim\_ponto}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - dim\_ponto}
+\label{tab:mapping_dim_ponto}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+id & - & - & Chave surrogate gerada \\ \hline
+local\_fk & dim\_local & id & Lookup via id\_municipio \\ \hline
+latitude & Queimadas & latitude & Extração direta (graus decimais) \\ \hline
+longitude & Queimadas & longitude & Extração direta (graus decimais) \\ \hline
+bioma & Queimadas & bioma & Extração direta \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Dimensão: dim\_horario}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - dim\_horario}
+\label{tab:mapping_dim_horario}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+id & - & - & Chave surrogate gerada \\ \hline
+hora & Queimadas/Clima & data\_hora & Extração da hora do campo datetime \\ \hline
+minuto & Queimadas/Clima & data\_hora & Extração do minuto do campo datetime \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Tabela Ponte: bridge\_horario}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - bridge\_horario}
+\label{tab:mapping_bridge_horario}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|p{6cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+horario\_minuto\_fk & dim\_horario & id & Lookup para granularidade de minuto \\ \hline
+horario\_hora\_fk & dim\_horario & id & Lookup para granularidade de hora (minuto=0) \\ \hline
+\multicolumn{4}{|l|}{\textit{Relação: cada hora (HH:00) mapeia para 60 minutos (HH:00 a HH:59)}} \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Fato: Queimadas}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - Fato Queimadas}
+\label{tab:mapping_fact_queimadas}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|p{5cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Tipo} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+\multicolumn{5}{|c|}{\textit{Chaves Estrangeiras (Dimensões)}} \\ \hline
+data\_fk & FK & Queimadas & data\_hora, ano, mes & Lookup em dim\_data \\ \hline
+ponto\_fk & FK & Queimadas & lat, long, bioma, id\_municipio & Lookup em dim\_ponto \\ \hline
+horario\_fk & FK & Queimadas & data\_hora & Lookup em dim\_horario (minuto) \\ \hline
+\multicolumn{5}{|c|}{\textit{Fatos (Métricas)}} \\ \hline
+risco\_fogo & Fato & Queimadas & risco\_fogo & Extração direta (não aditivo) \\ \hline
+potencia\_radiativa\_fogo & Fato & Queimadas & potencia\_radiativa\_fogo & Extração direta (aditivo, MW) \\ \hline
+dias\_sem\_chuva & Fato & Queimadas & dias\_sem\_chuva & Extração direta (semi-aditivo) \\ \hline
+\multicolumn{5}{|l|}{\textit{Granularidade: um foco de incêndio por ponto geográfico, data e minuto}} \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsubsection{Fato: Clima}
+
+\begin{table}[H]
+\centering
+\caption{Mapeamento de Atributos - Fato Clima}
+\label{tab:mapping_fact_clima}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|p{5cm}|}
+\hline
+\textbf{Atributo DW} & \textbf{Tipo} & \textbf{Fonte} & \textbf{Atributo Fonte} & \textbf{Transformação} \\ \hline
+\multicolumn{5}{|c|}{\textit{Chaves Estrangeiras (Dimensões)}} \\ \hline
+data\_fk & FK & Clima & data\_hora, ano & Lookup em dim\_data \\ \hline
+local\_fk & FK & Clima & id\_municipio, sigla\_uf & Lookup em dim\_local \\ \hline
+horario\_fk & FK & Clima & data\_hora & Lookup em dim\_horario (hora) \\ \hline
+\multicolumn{5}{|c|}{\textit{Fatos (Métricas)}} \\ \hline
+temperatura & Fato & Clima & temperatura & Extração direta (°C, não aditivo) \\ \hline
+precipitacao & Fato & Clima & precipitacao\_dia & Extração direta (mm, semi-aditivo) \\ \hline
+umidade\_relativa & Fato & Clima & umidade\_relativa & Extração direta (\%, não aditivo) \\ \hline
+vento\_velocidade & Fato & Clima & vento\_velocidade & Extração direta (m/s, não aditivo) \\ \hline
+vento\_direcao & Fato & Clima & vento\_direcao & Extração direta (graus, não aditivo) \\ \hline
+co\_ppb & Fato & Clima & co\_ppb & Extração direta (ppb, não aditivo) \\ \hline
+no2\_ppb & Fato & Clima & no2\_ppb & Extração direta (ppb, não aditivo) \\ \hline
+o3\_ppb & Fato & Clima & o3\_ppb & Extração direta (ppb, não aditivo) \\ \hline
+pm25\_ugm3 & Fato & Clima & pm25\_ugm3 & Extração direta ($\mu$g/m³, não aditivo) \\ \hline
+so2\_ugm3 & Fato & Clima & so2\_ugm3 & Extração direta ($\mu$g/m³, não aditivo) \\ \hline
+\multicolumn{5}{|l|}{\textit{Granularidade: medições climáticas agregadas por município, data e hora}} \\ \hline
+\end{tabular}
+}
+\end{table}
+
