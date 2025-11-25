@@ -8,17 +8,19 @@ style: |
     gap: 1rem;
   }
 ---
+
 # Cinzas do Brasil
 
 Projeto final da Disciplina Processamento Analítico de Dados
 Realizado por:
 Felipe Carneiro Machado - 14569373
-Lívia Lelis - nusp
-Clara Ernesto de Carvalho - nusp
+Lívia Lelis - 12543822
+Clara Ernesto de Carvalho - 14559479
 
 ---
 
 # Objetivo
+
 - Consolidação de dados do INPE (Instituto Nacional de Pesquisas Espaciais) relativos a focos de queimadas e clima
 - Criação de um Data Warehouse com dados históricos (desde 2005 (alguém corrige essa data))
 - Geração de visualizações baseadas em consultas analíticas para tomada estratégica de decisões
@@ -34,6 +36,7 @@ Vai ter um diagrama aqui (ta quase feito, falta definir so o de visualizacao)
 # Organização do Data Warehouse
 
 Constelação de fatos corrigida
+
 <div class="columns">
 <div>
 <ul>
@@ -75,6 +78,7 @@ Pré-processamento dos dados:
 # Transformação
 
 Criação de dimensões e tabelas de fatos:
+
 - Dimensão Data gerada a partir de união e projeção das tabelas de Queimadas e Clima
 - Dimensões Local geradas a partir da junção e projeção de cada tabela com as relações de Municípios e regiões
 - Dimensão Horário preenchida proceduralmente com todos os valores de horas e minutos
@@ -87,6 +91,7 @@ Criação de dimensões e tabelas de fatos:
 Dados carregados em um RSGBD (PostgreSQL)
 
 Indíces criados para colunas de frequente acesso:
+
 - Chaves estrangeiras nas tabelas de fatos e dimensões do esquema Queimadas
 - Timestamp, Mes e ano para Data
 - Hora para Horário
@@ -98,9 +103,3 @@ Indíces criados para colunas de frequente acesso:
 
 - Consultas implementadas em SQL
 - Visualizações construídas com (SOFTWARE Q A CLARA ESCOLHER)
-
-
-
-
-
-
