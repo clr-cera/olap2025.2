@@ -22,7 +22,7 @@ Clara Ernesto de Carvalho - 14559479
 # Objetivo
 
 - Consolidação de dados do INPE (Instituto Nacional de Pesquisas Espaciais) relativos a focos de queimadas e clima
-- Criação de um Data Warehouse com dados históricos (desde 2005 (alguém corrige essa data))
+- Criação de um Data Warehouse com dados históricos (desde 2003 (alguém corrige essa data))
 - Geração de visualizações baseadas em consultas analíticas para tomada estratégica de decisões
 
 ---
