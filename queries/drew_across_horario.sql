@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW drill_across_horario AS
+CREATE MATERIALIZED VIEW drill_across_horario_mat AS
 WITH joined_clima AS
          (SELECT
               dlc.nome_municipio,

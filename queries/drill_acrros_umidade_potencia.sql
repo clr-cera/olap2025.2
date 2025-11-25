@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW drill_across_umidade_potencia AS
+CREATE MATERIALIZED VIEW drill_across_umidade_potencia_mat AS
 WITH joined_clima AS
     (SELECT
          dlc.regiao_uf,

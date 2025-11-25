@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW slice_seca_norte_clima AS
+CREATE MATERIALIZED VIEW slice_seca_norte_clima_mat AS
 SELECT
     dd.dia,
     dlc.nome_municipio,

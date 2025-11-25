@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW drilldown_count_local AS
+CREATE MATERIALIZED VIEW drilldown_count_local_mat AS
 SELECT
     dim_local_queimada.nome_uf,
     dim_local_queimada.nome_municipio,

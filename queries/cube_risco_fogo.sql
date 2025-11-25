@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW cube_bioma_risco_fogo AS
+CREATE MATERIALIZED VIEW cube_bioma_risco_fogo_mat AS
 SELECT
     dd.ano,
     dlq.bioma,

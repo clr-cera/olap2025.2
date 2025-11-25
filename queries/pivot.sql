@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW pivot_query_potencia_mes_uf AS
+CREATE MATERIALIZED VIEW pivot_query_potencia_mes_uf_mat AS
 SELECT
     dl.nome_uf,
     dd.mes,

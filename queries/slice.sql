@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW slice_precipitacao_estado_mes_setembro AS
+CREATE MATERIALIZED VIEW slice_precipitacao_estado_mes_setembro_mat AS
 SELECT
     dd.mes,
     dlc.nome_uf,

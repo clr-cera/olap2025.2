@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW rollup_avg_precipitacao AS
+CREATE MATERIALIZED VIEW rollup_avg_precipitacao_mat AS
 SELECT
     dd.ano,
     dd.mes,
