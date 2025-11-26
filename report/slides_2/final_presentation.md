@@ -53,6 +53,54 @@ Constelação de fatos corrigida
 
 ---
 
+# Organização do <br>Data Warehouse
+
+## Queimadas
+
+Esquema estrela corrigido
+
+- Dessa vez, fizemos o esquema estrela sem pensar na posterior unificação
+
+![bg right fit](./diagrams/queimadas_schema.png)
+
+---
+
+# Organização do <br>Data Warehouse
+
+## Clima
+
+Esquema estrela corrigido
+
+- Dessa vez, fizemos o esquema estrela sem pensar na posterior unificação
+
+## ![bg right fit](./diagrams/clima_schema.png)
+
+---
+
+# Infraestrutura
+
+## Provisionamento com Terraform
+
+Provisionamos com Terraform:
+
+- Base de dados PostgreSQL
+- Jobs Spark para ETL
+- Superset para visualização dos dados
+
+## ![bg right fit](https://www.datocms-assets.com/2885/1679095195-devdot-terraform_lm.png)
+
+---
+
+# Infraestrutura
+
+## Google Cloud Platform
+
+Tava de graça 🙏 (Deram 1800 reais de crédito pra gente)
+
+## ![bg right fit](https://media.licdn.com/dms/image/v2/D5612AQEjZljStRxpOQ/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1691568005689?e=2147483647&v=beta&t=PbaaQ-GXlNVWUG6ct-poejXcFb2-i6TuaqqrDfwwnZY)
+
+---
+
 # Extração dos Dados
 
 Foram utilizadas 4 fontes:
@@ -122,7 +170,6 @@ Indíces criados para colunas de frequente acesso:
 <img src="charts/riscoFogoByBiomaUf.png" height=500vh>
 </center>
 
-
 ---
 
 # Risco de Fogo por Estado e Bioma
@@ -133,7 +180,6 @@ Indíces criados para colunas de frequente acesso:
 
 ---
 
- 
 # Focos de Incêndio relacionados à poluição e temperatura, por hora do dia
 
 <center>
@@ -142,7 +188,7 @@ Indíces criados para colunas de frequente acesso:
 
 ---
 
-# Potência Radiativa média por Umidade média para os Estados, com Região indicada 
+# Potência Radiativa média por Umidade média para os Estados, com Região indicada
 
 <center>
 <img src="charts/frpHumidity.png" height=450vh>
@@ -158,7 +204,6 @@ Indíces criados para colunas de frequente acesso:
 
 ---
 
-
 # Potência Radiativa por Mês e Estado
 
 <center>
@@ -166,7 +211,6 @@ Indíces criados para colunas de frequente acesso:
 </center>
 
 ---
-
 
 # Potência Radiativa por Estado com filtro para Mês
 
@@ -176,7 +220,6 @@ Indíces criados para colunas de frequente acesso:
 
 ---
 
-
 # Precipitação por Estado no Mês de Setembro
 
 <center>
@@ -184,7 +227,6 @@ Indíces criados para colunas de frequente acesso:
 </center>
 
 ---
-
 
 # Qualidade do ar na região Norte na época de secas
 
@@ -196,17 +238,29 @@ Indíces criados para colunas de frequente acesso:
 
 # Conclusões
 
-
 - Correlações identificadas entre dados de queimadas e clima (Ex: FRP x Umidade)
 
 - Identificação de biomas e estado em maior risco de focos de incêndios, além de estados e cidades com maior incidência
 
 - Análise de comportamentos específicos para cada estado quanto a intensidade de queimadas
 
---- 
+---
+
+# Referências
+
+- [Google Cloud Platform](https://bombatec.com.br/shop/manufacturer-site?&transition=top97566919052470)
+- [Terraform](https://developer.hashicorp.com/terraform)
+
+---
+
+# Código Fonte
+
+## [Github](https://github.com/clr-cera/olap2025.2)
+
+## ![bg right fit](./qrcodes/github.png)
+
+---
 
 # **Perguntas?**
 
 UwU
-
-
