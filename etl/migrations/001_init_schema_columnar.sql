@@ -12,19 +12,19 @@ CREATE TABLE IF NOT EXISTS dim_data (
     is_weekend BOOLEAN,
     semana_ano INTEGER,
     estacao INTEGER
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS dim_horario_clima (
     id_horario INTEGER PRIMARY KEY,
     hora INTEGER
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS dim_horario_queimada (
     id_horario INTEGER PRIMARY KEY,
     id_horario_clima INTEGER REFERENCES dim_horario_clima(id_horario),
     hora INTEGER,
     minuto INTEGER
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS dim_local_clima (
     id_local INTEGER PRIMARY KEY,
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS dim_local_clima (
     nome_uf TEXT,
     nome_municipio TEXT,
     id_municipio INTEGER
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS dim_local_queimada (
     id_local INTEGER PRIMARY KEY,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS dim_local_queimada (
     latitude DOUBLE PRECISION,
     longitude DOUBLE PRECISION,
     bioma TEXT
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS fct_clima (
     id_data INTEGER REFERENCES dim_data(id_data),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS fct_clima (
     so2_ugm3 DOUBLE PRECISION,
     precipitacao_dia DOUBLE PRECISION,
     PRIMARY KEY (id_data, id_local, id_horario)
-) WITH columnar;
+) USING columnar;
 
 CREATE TABLE IF NOT EXISTS fct_queimada (
     id_data INTEGER REFERENCES dim_data(id_data),
@@ -74,4 +74,4 @@ CREATE TABLE IF NOT EXISTS fct_queimada (
     dias_sem_chuva INTEGER,
     precipitacao DOUBLE PRECISION,
     PRIMARY KEY (id_data, id_local, id_horario)
-) WITH columnar;
+) USING columnar;

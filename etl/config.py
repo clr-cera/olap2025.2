@@ -30,7 +30,8 @@ class SinkConfig:
 
 @dataclass
 class ETLConfig:
-    columnar_migration_enabled: bool = False
+    # General
+    columnar_migration_enabled: bool
     spark_config: Dict[str, Any]
     
     # Sources
