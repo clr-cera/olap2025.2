@@ -30,6 +30,7 @@ class SinkConfig:
 
 @dataclass
 class ETLConfig:
+    columnar_migration_enabled: bool = False
     spark_config: Dict[str, Any]
     
     # Sources
@@ -54,6 +55,7 @@ class ETLConfig:
             return SinkConfig(SinkType(cfg['sink_type']), cfg.get('path'), cfg.get('connection_properties'), cfg.get('jdbc_url'), cfg.get('table_name'), cfg.get('mode', 'overwrite'))
 
         return cls(
+            columnar_migration_enabled=config.get('columnar_migration_enabled', False),
             spark_config=config.get('spark_config', {}),
             municipios_source=create_source(config['municipios_source']),
             uf_source=create_source(config['uf_source']),

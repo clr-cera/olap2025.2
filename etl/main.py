@@ -95,7 +95,7 @@ def run_etl(config: ETLConfig):
     spark = create_spark_session(config.spark_config.get("spark.app.name", "Wildfire ETL"))
     extractor = Extractor(spark)
     transformer = Transformer(spark)
-    loader = Loader(spark)
+    loader = Loader(spark, config.columnar_migration_enabled)
 
     try:
         # Extract

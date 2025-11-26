@@ -26,10 +26,9 @@ main:
             runtimeConfig:
               version: "${runtime_version}"
               properties:
-                spark.driver.cores: "8"
-                spark.driver.memory: "32g"
-                spark.executor.cores: "8"
-                spark.executor.memory: "32g"
+                spark.dynamicAllocation.initialExecutors: "4"
+                spark.dynamicAllocation.minExecutors: "4"
+                spark.dynamicAllocation.maxExecutors: "4"
             pysparkBatch:
               mainPythonFileUri: "${main_python_uri}"
               pythonFileUris:

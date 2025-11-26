@@ -7,8 +7,9 @@ import pkgutil
 logger = logging.getLogger(__name__)
 
 class Loader:
-    def __init__(self, spark: SparkSession):
+    def __init__(self, spark: SparkSession, columnar_migration_enabled: bool = False):
         self.spark = spark
+        self.columnar_migration_enabled = columnar_migration_enabled
         self.indices = {
             "dim_data": {
                 "idx_dim_data_date": "CREATE INDEX idx_dim_data_date ON dim_data(date_time_iso)",
@@ -41,6 +42,15 @@ class Loader:
                 "idx_fct_clima_horario": "CREATE INDEX idx_fct_clima_horario ON fct_clima(id_horario)"
             }
         }
+
+    def _is_columnar_migration_enabled(self) -> bool:
+        """Check Spark config to decide whether to run columnar migration logic.
+
+        Controlled via the Spark config key
+        ``wildfire.columnar.migration.enabled`` and defaults to False when
+        missing or malformed.
+        """
+        return self.columnar_migration_enabled
 
     def _get_connection(self, config: SinkConfig):
         # Load the PostgreSQL driver explicitly
@@ -88,7 +98,11 @@ class Loader:
 
         try:
             # Read migration file from package resources
-            sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema.sql")
+            if self._is_columnar_migration_enabled():
+                sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema_columnar.sql")
+            else:
+                sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema.sql")
+
             if not sql_bytes:
                 raise FileNotFoundError("Migration file not found in package: etl/migrations/001_init_schema.sql")
             
@@ -165,6 +179,9 @@ class Loader:
             writer.parquet(config.path)
             
         elif config.sink_type == SinkType.POSTGRES:
+            columnar_enabled = self._is_columnar_migration_enabled()
+            logger.info(f"Columnar migration enabled: {columnar_enabled}")
+
             # Run migrations (idempotent)
             self.run_migrations(config)
             

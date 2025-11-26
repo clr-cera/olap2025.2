@@ -9,41 +9,50 @@ locals {
   dataproc_jar_file_uris   = ["gs://${local.etl_bucket_name}/libs/postgresql-42.7.3.jar"]
   dataproc_config_uri      = "gs://${local.etl_bucket_name}/configs/dataproc_config.json"
   dataproc_args            = ["--config", local.dataproc_config_uri]
-  postgres_host = "10.158.15.204"
+  columnar_migration_enabled = true
+
+
+  # postgres_host = "10.45.128.3" # Cloud SQL internal IP
+  # postgres_host = "10.158.15.204" # Alloy DB internal IP
+  postgres_host = "10.158.15.228" # Hyper DB internal IP
 
   dataproc_config_content = templatefile("${path.module}/templates/dataproc_config.json.tmpl", {
-    bucket_name    = local.etl_bucket_name,
-    raw_prefix     = var.etl_raw_prefix,
-    curated_prefix = var.etl_curated_prefix,
-    postgres_host  = local.postgres_host,
-    postgres_port  = var.db_port,
-    postgres_db    = var.db_name,
-    postgres_user  = var.db_user,
-    postgres_pass  = var.db_password
+    bucket_name                = local.etl_bucket_name,
+    raw_prefix                 = var.etl_raw_prefix,
+    curated_prefix             = var.etl_curated_prefix,
+    postgres_host              = local.postgres_host,
+    postgres_port              = var.db_port,
+    postgres_db                = var.db_name,
+    postgres_user              = var.db_user,
+    postgres_pass              = var.db_password,
+    columnar_migration_enabled = tostring(local.columnar_migration_enabled)
   })
 
   dataproc_config_gcs_content = templatefile("${path.module}/templates/dataproc_config_gcs.json.tmpl", {
-    bucket_name    = local.etl_bucket_name,
-    raw_prefix     = var.etl_raw_prefix,
-    curated_prefix = var.etl_curated_prefix
+    bucket_name                = local.etl_bucket_name,
+    raw_prefix                 = var.etl_raw_prefix,
+    curated_prefix             = var.etl_curated_prefix,
+    columnar_migration_enabled = tostring(local.columnar_migration_enabled)
   })
 
   dataproc_config_bq_gcs_content = templatefile("${path.module}/templates/dataproc_config_bq_gcs.json.tmpl", {
-    bucket_name    = local.etl_bucket_name,
-    raw_prefix     = var.etl_raw_prefix,
-    curated_prefix = var.etl_curated_prefix,
-    project_id     = var.gcp_project_id
+    bucket_name                = local.etl_bucket_name,
+    raw_prefix                 = var.etl_raw_prefix,
+    curated_prefix             = var.etl_curated_prefix,
+    project_id                 = var.gcp_project_id,
+    columnar_migration_enabled = tostring(local.columnar_migration_enabled)
   })
 
   dataproc_config_bq_postgres_content = templatefile("${path.module}/templates/dataproc_config_bq_postgres.json.tmpl", {
-    bucket_name    = local.etl_bucket_name,
-    raw_prefix     = var.etl_raw_prefix,
-    project_id     = var.gcp_project_id,
-    postgres_host  = local.postgres_host,
-    postgres_port  = var.db_port,
-    postgres_db    = var.db_name,
-    postgres_user  = var.db_user,
-    postgres_pass  = var.db_password
+    bucket_name                = local.etl_bucket_name,
+    raw_prefix                 = var.etl_raw_prefix,
+    project_id                 = var.gcp_project_id,
+    postgres_host              = local.postgres_host,
+    postgres_port              = var.db_port,
+    postgres_db                = var.db_name,
+    postgres_user              = var.db_user,
+    postgres_pass              = var.db_password,
+    columnar_migration_enabled = tostring(local.columnar_migration_enabled)
   })
 }
 

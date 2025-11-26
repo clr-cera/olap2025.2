@@ -48,3 +48,9 @@ variable "db_password" {
   type        = string
   default     = "wildfire"
 }
+
+variable "db_postgres_password" {
+  description = "PostgreSQL 'postgres' user password"
+  type        = string
+  default     = "postgres"
+}

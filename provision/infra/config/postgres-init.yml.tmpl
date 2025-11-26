@@ -1,0 +1,123 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - software-properties-common
+  - wget
+  - gnupg2
+
+write_files:
+  - path: /etc/sysctl.d/99-optim.conf
+    content: |
+      # Increase maximum TCP buffer sizes
+      net.core.rmem_max = 134217728
+      net.core.wmem_max = 134217728
+      net.ipv4.tcp_rmem = 4096 87380 134217728
+      net.ipv4.tcp_wmem = 4096 65536 134217728
+
+      # Enable TCP window scaling
+      net.ipv4.tcp_window_scaling = 1
+
+      # Reduce TCP connection latency
+      net.ipv4.tcp_timestamps = 0
+      net.ipv4.tcp_sack = 1
+      net.ipv4.tcp_no_metrics_save = 1
+      net.ipv4.tcp_mtu_probing = 1
+
+      # Increase max socket backlog
+      net.core.somaxconn = 4096
+
+      # Allow more open files and connections
+      fs.file-max = 2097152
+
+      # Enable memory overcommit (Postgres benefits from it)
+      vm.overcommit_memory = 2
+      vm.overcommit_ratio = 95
+
+      # Enable huge pages support
+      vm.nr_hugepages = 128
+
+      # Reduce swappiness
+      vm.swappiness = 1
+
+runcmd:
+  # Apply sysctl settings
+  - sysctl --system
+
+  # Increase file descriptor and memory lock limits
+  - echo "* soft nofile 1048576" | tee -a /etc/security/limits.conf
+  - echo "* hard nofile 1048576" | tee -a /etc/security/limits.conf
+  - echo "* soft memlock unlimited" | tee -a /etc/security/limits.conf
+  - echo "* hard memlock unlimited" | tee -a /etc/security/limits.conf
+
+  # Add Citus repository and install PostgreSQL + Citus
+  - curl https://install.citusdata.com/community/deb.sh | sudo bash || exit 0
+  # Work around missing support for citus in noble
+  # - sed -i 's/noble/jammy/g' /etc/apt/sources.list.d/citusdata_community.list
+  - apt-get update -y
+  - DEBIAN_FRONTEND=noninteractive apt-get install -yq postgresql-17-citus-13.0
+  # Preload Citus extension
+  - echo "shared_preload_libraries = 'citus'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  # Listen on all interfaces
+  - echo "listen_addresses = '*'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  # Configuration Tuning
+  # Memory Settings
+  - echo "shared_buffers = '20GB'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # 25% of RAM
+  - echo "work_mem = '512MB'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Balanced for concurrency
+  - echo "maintenance_work_mem = '8GB'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # VACUUM, CREATE INDEX, etc.
+  - echo "effective_cache_size = '60GB'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Planner cache assumption
+  # Parallelism
+  - echo "max_worker_processes = 22" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Total worker processes
+  - echo "max_parallel_workers = 22" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Max parallel workers globally
+  - echo "max_parallel_workers_per_gather = 6" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Per-query limit
+  # Connection Handling
+  - echo "max_connections = 100" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Use PgBouncer if more needed
+  # Disk and WAL Settings (for SSDs)
+  - echo "wal_compression = on" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Reduce WAL volume
+  - echo "wal_writer_delay = 200ms" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Less frequent WAL fsync
+  - echo "checkpoint_completion_target = 0.9" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Spread I/O
+  - echo "checkpoint_timeout = 15min" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Less frequent checkpoints
+  - echo "max_wal_size = 8GB" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Larger WAL before checkpoint
+  - echo "min_wal_size = 2GB" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Min WAL size before cleanup
+  - echo "random_page_cost = 1.1" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Lower for SSD
+  # Durability
+  - echo "synchronous_commit = off" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Better throughput, possible loss
+  # Citus-specific Tuning
+  - echo "citus.max_adaptive_executor_pool_size = 100" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "citus.executor_slow_start_interval = '10ms'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "citus.coordinator_aggregation_strategy = 'disabled'" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "citus.enable_repartition_joins = on" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "citus.shard_replication_factor = 1" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Optional: reduce overhead
+  # Logging and Performance Debugging
+  - echo "log_min_duration_statement = 1000" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "log_checkpoints = on" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "log_lock_waits = on" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  - echo "deadlock_timeout = 1s" | sudo tee -a /etc/postgresql/17/main/postgresql.conf
+  # Extra Tuning
+  - echo "huge_pages = try" | sudo tee -a /etc/postgresql/17/main/postgresql.conf # Use huge pages if supported
+  # Allow local and private network access
+  - echo "host all all 10.0.0.0/8 trust" | sudo tee -a /etc/postgresql/17/main/pg_hba.conf
+  - echo "host all all 127.0.0.1/32 trust" | sudo tee -a /etc/postgresql/17/main/pg_hba.conf
+  - echo "host all all ::1/128 trust" | sudo tee -a /etc/postgresql/17/main/pg_hba.conf
+  # Allow public network access
+  - echo "host all all 0.0.0.0/0 scram-sha-256" | sudo tee -a /etc/postgresql/17/main/pg_hba.conf
+  # Restart PostgreSQL
+  - systemctl restart postgresql@17-main
+  # Add Citus extension to the default database
+  - sudo -i -u postgres psql -c "CREATE EXTENSION IF NOT EXISTS citus;"
+  # Create application roles and users for OLAP workloads (including setting postgres superuser password)
+  - sudo -i -u postgres psql -c "CREATE EXTENSION IF NOT EXISTS citus;"
+
+  # Create wildfire role (idempotent-ish: ignore if exists, then ensure password)
+  - sudo -i -u postgres psql -c "CREATE ROLE wildfire WITH LOGIN PASSWORD '${wildfire_password}' NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;"
+
+  # Set password on built-in superuser 'postgres'
+  - sudo -i -u postgres psql -c "ALTER ROLE postgres WITH LOGIN PASSWORD '${postgres_password}';"
+
+  # Ensure wildfire database exists and is owned by wildfire
+  - sudo -i -u postgres createdb -O wildfire wildfire
+
+  # Add Citus extension to the wildfire database
+  - sudo -i -u postgres psql -d wildfire -c "CREATE EXTENSION IF NOT EXISTS citus;"
