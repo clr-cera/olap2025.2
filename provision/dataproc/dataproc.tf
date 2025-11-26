@@ -13,7 +13,6 @@ locals {
 
 
   # postgres_host = "10.45.128.3" # Cloud SQL internal IP
-  # postgres_host = "10.158.15.204" # Alloy DB internal IP
   postgres_host = "10.158.15.228" # Hyper DB internal IP
 
   dataproc_config_content = templatefile("${path.module}/templates/dataproc_config.json.tmpl", {
