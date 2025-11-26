@@ -21,6 +21,45 @@ Clara Ernesto de Carvalho - 14559479
 
 ---
 
+## Contexto do Problema
+
+**30,8 milhões de hectares** queimados no Brasil em 2024
+
+- Área maior que toda a Itália
+
+**Objetivo**: Criar um Data Warehouse para análise de:
+
+- Correlações entre queimadas e clima
+- Padrões espaciais e temporais
+- Impactos na qualidade do ar
+
+---
+
+## Fontes de Dados
+
+### **Queimadas - INPE**
+
+- Focos de incêndio detectados por satélite
+- Localização geográfica (lat/long), bioma
+- FRP, dias sem chuva, risco de fogo
+
+### **Clima - SISAM/INPE**
+
+- Dados meteorológicos e qualidade do ar
+- Temperatura, umidade, precipitação
+- Poluentes: PM2.5, CO, NO₂, O₃, SO₂
+
+---
+
+## Fontes de Dados
+
+### **Geográficos - IBGE**
+
+- Diretórios de UFs e municípios
+- Hierarquias administrativas e regiões
+
+---
+
 # Objetivo
 
 - Consolidação de dados do INPE (Instituto Nacional de Pesquisas Espaciais) relativos a focos de queimadas e clima
@@ -35,21 +74,17 @@ Clara Ernesto de Carvalho - 14559479
 
 ---
 
-# Organização do Data Warehouse
+# Organização do <br>Data Warehouse
 
 Constelação de fatos corrigida
 
-<div class="columns">
-<div>
 <ul>
-<li>Remoção da tabela bridge</li>
-<li>Dimensão Data conformada</li>
-<li>Dimensões horário e local do esquema Queimada (granularidade mais fina) possuem Chaves Estrangeiras para as mesmas dimensões no esquema Clima (granularidade mais grossa)</li>
+<li>Tabela bridge</li>
+<li>Dimensão Data unificada</li>
+<li>Dimensões do esquema Queimada possuem Chaves Estrangeiras para as mesmas dimensões no esquema Clima</li>
 </ul>
-</div>
-<center>
-<img align="center" src="diagrams/full_schema.png" width="400">
-</center>
+
+![bg right fit](./diagrams/full_schema.png)
 
 ---
 
