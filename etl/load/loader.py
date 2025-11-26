@@ -99,8 +99,10 @@ class Loader:
         try:
             # Read migration file from package resources
             if self._is_columnar_migration_enabled():
+                logger.info("Loaded columnar migrations.")
                 sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema_columnar.sql")
             else:
+                logger.info("Loaded base migrations.")
                 sql_bytes = pkgutil.get_data("etl", "migrations/001_init_schema.sql")
 
             if not sql_bytes:

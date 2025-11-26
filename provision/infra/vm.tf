@@ -1,7 +1,7 @@
 resource "google_compute_instance" "superset" {
   project      = var.gcp_project_id
   name         = "superset-vm"
-  machine_type = "e2-standard-2"
+  machine_type = "n2d-standard-2"
   zone         = var.gcp_zone
 
   boot_disk {
@@ -10,6 +10,8 @@ resource "google_compute_instance" "superset" {
       size  = 128
       type  = "pd-ssd"
     }
+
+    auto_delete = false
   }
 
   network_interface {
@@ -47,13 +49,14 @@ resource "google_compute_instance" "postgres" {
 
   boot_disk {
     initialize_params {
-      # Ubuntu 22.04 LTS (Jammy / Noble equivalent image family for GCE)
       image = "ubuntu-os-cloud/ubuntu-2204-lts"
       size  = 256
       type  = "hyperdisk-balanced"
       provisioned_iops       = 15000
       provisioned_throughput = 1000
     }
+
+    auto_delete = false
   }
 
   network_interface {
@@ -72,13 +75,6 @@ resource "google_compute_instance" "postgres" {
     provisioning_model          = "SPOT"
     on_host_maintenance         = "TERMINATE"
     instance_termination_action = "STOP"
-
-    # graceful_shutdown {
-    #   enabled = true
-    #   max_duration {
-    #     seconds = 600
-    #   }
-    # }
   }
 
   metadata = {

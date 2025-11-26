@@ -1,4 +1,3 @@
-DROP MATERIALIZED VIEW slice_seca_norte_clima_mat;
 CREATE MATERIALIZED VIEW slice_seca_norte_clima_mat AS
 SELECT
     dd.dia_ano,
