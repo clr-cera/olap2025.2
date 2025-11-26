@@ -9,7 +9,7 @@ locals {
   dataproc_jar_file_uris   = ["gs://${local.etl_bucket_name}/libs/postgresql-42.7.3.jar"]
   dataproc_config_uri      = "gs://${local.etl_bucket_name}/configs/dataproc_config.json"
   dataproc_args            = ["--config", local.dataproc_config_uri]
-  columnar_migration_enabled = true
+  columnar_migration_enabled = false
 
 
   # postgres_host = "10.45.128.3" # Cloud SQL internal IP
@@ -88,7 +88,10 @@ resource "google_storage_bucket_object" "etl_main" {
 
 resource "null_resource" "etl_package" {
   triggers = {
-    etl_files_md5 = md5(join("", [for f in fileset("${path.module}/../../etl", "**/*.py") : filemd5("${path.module}/../../etl/${f}")]))
+    etl_files_md5 = md5(join("", concat(
+      [for f in fileset("${path.module}/../../etl", "**/*.py") : filemd5("${path.module}/../../etl/${f}")],
+      [for f in fileset("${path.module}/../../etl", "**/*.sql") : filemd5("${path.module}/../../etl/${f}")]
+    )))
   }
 
   depends_on = [google_storage_bucket.etl_artifacts]

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS dim_horario_clima (
 
 CREATE TABLE IF NOT EXISTS dim_horario_queimada (
     id_horario INTEGER PRIMARY KEY,
-    id_horario_clima INTEGER REFERENCES dim_horario_clima(id_horario),
+    id_horario_clima INTEGER,
     hora INTEGER,
     minuto INTEGER
 ) USING columnar;
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS dim_local_clima (
 
 CREATE TABLE IF NOT EXISTS dim_local_queimada (
     id_local INTEGER PRIMARY KEY,
-    id_local_clima INTEGER REFERENCES dim_local_clima(id_local),
+    id_local_clima INTEGER,
     regiao_uf TEXT,
     sigla_uf TEXT,
     nome_uf TEXT,
@@ -49,9 +49,9 @@ CREATE TABLE IF NOT EXISTS dim_local_queimada (
 ) USING columnar;
 
 CREATE TABLE IF NOT EXISTS fct_clima (
-    id_data INTEGER REFERENCES dim_data(id_data),
-    id_local INTEGER REFERENCES dim_local_clima(id_local),
-    id_horario INTEGER REFERENCES dim_horario_clima(id_horario),
+    id_data INTEGER,
+    id_local INTEGER,
+    id_horario INTEGER,
     temperatura DOUBLE PRECISION,
     umidade_relativa DOUBLE PRECISION,
     vento_velocidade DOUBLE PRECISION,
@@ -66,9 +66,9 @@ CREATE TABLE IF NOT EXISTS fct_clima (
 ) USING columnar;
 
 CREATE TABLE IF NOT EXISTS fct_queimada (
-    id_data INTEGER REFERENCES dim_data(id_data),
-    id_local INTEGER REFERENCES dim_local_queimada(id_local),
-    id_horario INTEGER REFERENCES dim_horario_queimada(id_horario),
+    id_data INTEGER,
+    id_local INTEGER,
+    id_horario INTEGER,
     risco_fogo DOUBLE PRECISION,
     potencia_radiativa_fogo DOUBLE PRECISION,
     dias_sem_chuva INTEGER,
