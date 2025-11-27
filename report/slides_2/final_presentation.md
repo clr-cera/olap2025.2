@@ -650,6 +650,12 @@ Não conseguimos pensar em uma visualização adequada, por causa da mudança de
 
 ---
 
+<style scoped>
+  img, figure {
+    image-rendering: pixelated !important;
+  }
+</style>
+
 # Código Fonte
 
 ## [Github](https://github.com/clr-cera/olap2025.2)

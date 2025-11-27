@@ -44,6 +44,7 @@ render_slides() {
 
     echo "Rendering slides_2..."
     npx @marp-team/marp-cli "$REPO_ROOT/report/slides_2/final_presentation.md" --pdf --allow-local-files -o "$REPO_ROOT/report/slides_2/final_presentation.pdf" --config-file "$REPO_ROOT/report/.marprc"
+    npx @marp-team/marp-cli "$REPO_ROOT/report/slides_2/final_presentation.md" --html  --allow-local-files -o "$REPO_ROOT/report/slides_2/final_presentation.html" --config-file "$REPO_ROOT/report/.marprc"
 }
 
 # Function to render document
