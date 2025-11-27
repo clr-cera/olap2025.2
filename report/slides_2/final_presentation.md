@@ -193,9 +193,40 @@ Indíces criados para colunas de frequente acesso:
 
 # Queimadas por Estado e Municipio
 
+```sql
+SELECT DISTINCT
+    dim_local_queimada.nome_uf,
+    dim_local_queimada.nome_municipio,
+    count(*) OVER (PARTITION BY nome_municipio) as count_focus_municipio,
+    count(*) OVER (PARTITION BY nome_uf) as count_focus_uf
+FROM fct_queimada
+        INNER JOIN dim_local_queimada ON fct_queimada.id_local = dim_local_queimada.id_local;
+```
+
+---
+
+# Queimadas por Estado e Municipio
+
 <center>
 <img src="charts/queimadaByUfCity.png" height=500vh>
 </center>
+
+---
+
+# Risco de Fogo por Bioma e Estado
+
+```sql
+SELECT
+  dd.ano,
+  dlq.bioma,
+  dlq.nome_uf,
+  avg(fct_queimada.risco_fogo) as media_risco_fogo
+FROM fct_queimada
+  INNER JOIN dim_data dd on fct_queimada.id_data = dd.id_data
+  INNER JOIN dim_local_queimada dlq on fct_queimada.id_local = dlq.id_local
+WHERE fct_queimada.risco_fogo is not null
+GROUP BY dd.ano, CUBE (dlq.nome_uf, dlq.bioma)
+```
 
 ---
 
@@ -215,11 +246,77 @@ Indíces criados para colunas de frequente acesso:
 
 ---
 
+```sql
+WITH joined_clima AS
+         (SELECT
+              dlc.nome_municipio,
+              dhc.hora,
+              avg(fct_clima.temperatura) as media_temperature,
+              avg(pm25_ugm3) as media_pm25_ugm3
+          FROM fct_clima
+                INNER JOIN public.dim_local_clima dlc on dlc.id_local = fct_clima.id_local
+                INNER JOIN public.dim_horario_clima dhc on dhc.id_horario = fct_clima.id_horario
+          GROUP BY dlc.nome_municipio, dhc.hora
+         ),
+     joined_queimada AS
+         (SELECT
+              dhq.hora,
+              dlq.nome_municipio,
+              Count(*) as count_focus
+          from fct_queimada
+                   INNER JOIN public.dim_horario_queimada dhq on fct_queimada.id_horario = dhq.id_horario
+                   INNER JOIN public.dim_local_queimada dlq on dlq.id_local = fct_queimada.id_local
+          GROUP BY dhq.hora, dlq.nome_municipio
+         )
+SELECT
+    jc.hora,
+    jc.nome_municipio,
+    jq.count_focus,
+    jc.media_pm25_ugm3,
+    jc.media_temperature
+FROM joined_clima jc
+         INNER JOIN joined_queimada jq ON jc.hora = jq.hora AND jc.nome_municipio = jq.nome_municipio;
+```
+
+---
+
 # Focos de Incêndio relacionados à poluição e temperatura, por hora do dia
 
 <center>
 <img src="charts/focosByTempPolHora.png" height=450vh>
 </center>
+
+---
+
+```sql
+WITH joined_clima AS
+    (SELECT
+         dlc.regiao_uf,
+         dd.trimestre,
+         avg(fct_clima.umidade_relativa) media_umidade_relativa
+     FROM fct_clima
+     INNER JOIN public.dim_local_clima dlc on dlc.id_local = fct_clima.id_local
+     INNER JOIN public.dim_data dd on fct_clima.id_data = dd.id_data
+     GROUP BY dlc.regiao_uf, dd.trimestre
+     ),
+    joined_queimada AS
+    (SELECT
+         d.trimestre,
+         dlq.regiao_uf,
+         avg(fct_queimada.potencia_radiativa_fogo) as media_potencia_radiativa_fogo
+     from fct_queimada
+     INNER JOIN public.dim_data d on d.id_data = fct_queimada.id_data
+     INNER JOIN public.dim_local_queimada dlq on dlq.id_local = fct_queimada.id_local
+     GROUP BY d.trimestre, dlq.regiao_uf
+     )
+SELECT
+    jc.regiao_uf,
+    jc.trimestre,
+    jq.media_potencia_radiativa_fogo,
+    jc.media_umidade_relativa
+FROM joined_clima jc
+  INNER JOIN joined_queimada jq ON jc.regiao_uf = jq.regiao_uf AND jc.trimestre = jq.trimestre
+```
 
 ---
 
@@ -241,6 +338,22 @@ Indíces criados para colunas de frequente acesso:
 
 # Potência Radiativa por Mês e Estado
 
+```sql
+SELECT
+    dl.nome_uf,
+    dd.mes,
+    avg(fct_queimada.potencia_radiativa_fogo) as media_potencia
+FROM fct_queimada
+  INNER JOIN public.dim_local_queimada dl ON fct_queimada.id_local = dl.id_local
+  INNER JOIN public.dim_data dd ON fct_queimada.id_data = dd.id_data
+WHERE fct_queimada.potencia_radiativa_fogo is not null
+GROUP BY (dl.nome_uf, dd.mes);
+```
+
+---
+
+# Potência Radiativa por Mês com filtro para Estado
+
 <center>
 <img src="charts/frpMesUF.png" height=450vh>
 </center>
@@ -257,6 +370,23 @@ Indíces criados para colunas de frequente acesso:
 
 # Precipitação por Estado no Mês de Setembro
 
+```sql
+SELECT
+    dd.mes,
+    dlc.nome_uf,
+    avg(fct_clima.precipitacao_dia) as media_precipitacao
+FROM fct_clima
+  INNER JOIN public.dim_data dd on dd.id_data = fct_clima.id_data
+  INNER JOIN public.dim_local_clima dlc on dlc.id_local = fct_clima.id_local
+WHERE dd.mes = 9
+GROUP BY (dd.mes, dlc.nome_uf)
+ORDER BY media_precipitacao DESC;
+```
+
+---
+
+# Precipitação por Estado no Mês de Setembro
+
 <center>
 <img src="charts/rainByStateSeptember.png" height=450vh>
 </center>
@@ -265,9 +395,46 @@ Indíces criados para colunas de frequente acesso:
 
 # Qualidade do ar na região Norte na época de secas
 
+```sql
+SELECT
+    dd.dia_ano,
+    dlc.nome_municipio,
+    avg(fct_clima.co_ppb) as media_co_ppb,
+    avg(fct_clima.pm25_ugm3) as media_pm25_ugm3,
+    avg(fct_clima.o3_ppb) as media_o3_ppb
+FROM fct_clima
+    JOIN public.dim_data dd on dd.id_data = fct_clima.id_data
+    JOIN public.dim_local_clima dlc on fct_clima.id_local = dlc.id_local
+WHERE dd.mes >6 AND dd.mes < 10 AND regiao_uf = 'Norte'
+GROUP BY dd.dia_ano, dlc.nome_municipio;
+```
+
+---
+
+# Qualidade do ar na região Norte na época de secas
+
 <center>
 <img src="charts/airQualityNoth.png" height=450vh>
 </center>
+
+---
+
+# RollUp Precipitação média por Ano, Região, mês e Estado
+
+```sql
+SELECT
+    dd.ano,
+    dd.mes,
+    dl.nome_uf,
+    dl.regiao_uf,
+    avg(fct_clima.precipitacao_dia) as media_precipitacao
+
+FROM fct_clima
+    INNER JOIN dim_data dd on dd.id_data = fct_clima.id_data
+    INNER JOIN dim_local_clima dl on dl.id_local = fct_clima.id_local
+GROUP BY ROLLUP
+    ((dd.ano, dl.regiao_uf),(dl.nome_uf, dd.mes))
+```
 
 ---
 
