@@ -156,11 +156,25 @@ Algumas das VMs utilizadas eram Spot, portanto podem ser derrubadas a qualquer m
 
 ## PostgreSQL
 
-Utilizamos Citus para armazenamento colunar
+Utilizamos Citus para armazenamento colunar.
 
 > Ol'reliable
 
 ## ![bg right fit](https://preview.redd.it/unpaiddevs-v0-ogtgvcdrn9tf1.png?auto=webp&s=c88c93b323c0564d7ec49aaade10baa8c5757526)
+
+---
+
+# ETL
+
+## Spark
+
+Usamos PySpark para o processo de ETL.
+Os Jobs foram configurados com terraform para a Google Cloud Platform.
+Utilizamos o serviço Dataproc.
+
+## Polars
+
+Utilizamos polars para o protótipo do ETL, e para testes de validação dos dados.
 
 ---
 
@@ -210,6 +224,8 @@ Indíces criados para colunas de frequente acesso:
 - Hora para Horário
 - UF e município para Local
 
+Também podemos carregar em parquets para testes de validação locais.
+
 ---
 
 # Consultas analíticas e visualização
@@ -230,6 +246,23 @@ SELECT DISTINCT
 FROM fct_queimada
         INNER JOIN dim_local_queimada ON fct_queimada.id_local = dim_local_queimada.id_local;
 ```
+
+---
+
+# Queimadas por Estado e Municipio
+
+| nome_uf           | nome_municipio     | count_focus_municipio | count_focus_uf |
+| :---------------- | :----------------- | :-------------------- | :------------- |
+| Bahia             | Sento Sé           | 3393                  | 793832         |
+| Maranhão          | Raposa             | 25                    | 1662525        |
+| Amazonas          | Boa Vista do Ramos | 4507                  | 1415893        |
+| Santa Catarina    | Major Vieira       | 410                   | 89056          |
+| Pará              | Palestina do Pará  | 664                   | 3711770        |
+| Paraná            | Telêmaco Borba     | 119                   | 154345         |
+| Maranhão          | Urbano Santos      | 14240                 | 1662525        |
+| São Paulo         | Pereiras           | 23                    | 308107         |
+| Rio Grande do Sul | São Vendelino      | 50                    | 106181         |
+| Minas Gerais      | Natércia           | 12                    | 611748         |
 
 ---
 
@@ -260,6 +293,21 @@ GROUP BY dd.ano, CUBE (dlq.nome_uf, dlq.bioma)
 
 # Risco de Fogo por Bioma e Estado
 
+| ano  | bioma          | nome_uf             | media_risco_fogo     |
+| :--- | :------------- | :------------------ | :------------------- |
+| 2023 | Cerrado        | Bahia               | 0.8824044485917271   |
+| 2023 | Mata Atlântica | Rio Grande do Norte | 0.909802325581396    |
+| 2024 | Amazônia       | Mato Grosso         | 0.8531616825819953   |
+| 2024 | Caatinga       | Piauí               | 0.9313792098082525   |
+| 2023 | Caatinga       | Minas Gerais        | 0.918389438943894    |
+| 2025 | Amazônia       | Acre                | 0.1572789115646258   |
+| 2025 | Cerrado        | Mato Grosso         | 0.016822857142857077 |
+| 2024 | Amazônia       | Amapá               | 0.7908056120696502   |
+
+---
+
+# Risco de Fogo por Bioma e Estado
+
 <center>
 <img src="charts/riscoFogoByBiomaUf.png" height=500vh>
 </center>
@@ -271,6 +319,26 @@ GROUP BY dd.ano, CUBE (dlq.nome_uf, dlq.bioma)
 <center>
 <img src="charts/riscoFogoByUfBioma.png" height=500vh>
 </center>
+
+---
+
+# Focos de Incêndio relacionados à poluição e temperatura, por hora do dia
+
+| nome_uf             | nome_municipio      | count_focus_municipio | count_focus_uf |
+| :------------------ | :------------------ | :-------------------- | :------------- |
+| Bahia               | Sento Sé            | 3393                  | 793832         |
+| Maranhão            | Raposa              | 25                    | 1662525        |
+| Amazonas            | Boa Vista do Ramos  | 4507                  | 1415893        |
+| Santa Catarina      | Major Vieira        | 410                   | 89056          |
+| Pará                | Palestina do Pará   | 664                   | 3711770        |
+| Paraná              | Telêmaco Borba      | 119                   | 154345         |
+| Maranhão            | Urbano Santos       | 14240                 | 1662525        |
+| São Paulo           | Pereiras            | 23                    | 308107         |
+| Rio Grande do Sul   | São Vendelino       | 50                    | 106181         |
+| Minas Gerais        | Natércia            | 12                    | 611748         |
+| Minas Gerais        | Lambari             | 220                   | 611748         |
+| Goiás               | Hidrolina           | 487                   | 369727         |
+| Rio Grande do Norte | São Bento do Trairí | 25                    | 41777          |
 
 ---
 
@@ -319,6 +387,22 @@ FROM joined_clima jc
 
 ---
 
+# Potência Radiativa média por Umidade média por Região e Trimestre
+
+| regiao_uf    | trimestre | media_potencia_radiativa_fogo | media_umidade_relativa |
+| :----------- | :-------- | :---------------------------- | :--------------------- |
+| Sul          | 3         | 14.93016002852389             | 78.32078885708523      |
+| Nordeste     | 4         | 43.95912624814175             | 68.69748443032579      |
+| Sul          | 4         | 24.745638802647903            | 77.1288658575511       |
+| Sudeste      | 2         | 17.759897081895193            | 77.01469390844045      |
+| Sul          | 1         | 19.802465331278853            | 80.37956862368847      |
+| Centro-Oeste | 2         | 49.15928071566512             | 71.78433590787404      |
+| Sudeste      | 4         | 29.698086744974844            | 75.24976807851378      |
+| Norte        | 1         | 29.770531719188085            | 88.50501484429284      |
+| Centro-Oeste | 3         | 42.16489918359046             | 54.083974791263095     |
+
+---
+
 ```sql
 WITH joined_clima AS
     (SELECT
@@ -351,7 +435,7 @@ FROM joined_clima jc
 
 ---
 
-# Potência Radiativa média por Umidade média para os Estados, com Região indicada
+# Potência Radiativa média por Umidade média por Região e Trimestre
 
 <center>
 <img src="charts/frpHumidity.png" height=450vh>
@@ -380,6 +464,25 @@ FROM fct_queimada
 WHERE fct_queimada.potencia_radiativa_fogo is not null
 GROUP BY (dl.nome_uf, dd.mes);
 ```
+
+---
+
+# Potência Radiativa por Mês e Estado
+
+| nome_uf             | mes | media_potencia     |
+| :------------------ | :-- | :----------------- |
+| Mato Grosso         | 7   | 50.06269768357538  |
+| Rio de Janeiro      | 12  | 24.77670068027211  |
+| Rio Grande do Norte | 10  | 26.767140077820997 |
+| Acre                | 5   | 7.59251870324189   |
+| Paraná              | 6   | 16.436818095419095 |
+| Goiás               | 3   | 23.517599677809038 |
+| Rondônia            | 4   | 6.954545454545454  |
+| São Paulo           | 7   | 32.97998578311361  |
+| Piauí               | 7   | 39.99880110480477  |
+| Acre                | 10  | 25.94986159897682  |
+| Distrito Federal    | 12  | 5.155              |
+| Paraíba             | 9   | 32.2182002314814   |
 
 ---
 
@@ -418,6 +521,23 @@ ORDER BY media_precipitacao DESC;
 
 # Precipitação por Estado no Mês de Setembro
 
+| mes | nome_uf            | media_precipitacao |
+| :-- | :----------------- | :----------------- |
+| 9   | Rio Grande do Sul  | 5.152203219315895  |
+| 9   | Santa Catarina     | 5.031276836158192  |
+| 9   | Paraná             | 3.659895572263993  |
+| 9   | Roraima            | 3.157              |
+| 9   | Amazonas           | 2.964731182795699  |
+| 9   | Acre               | 2.7641666666666667 |
+| 9   | Mato Grosso do Sul | 2.504367088607595  |
+| 9   | Rondônia           | 2.5016346153846154 |
+| 9   | São Paulo          | 2.113              |
+| 9   | Rio de Janeiro     | 1.9678442028985508 |
+
+---
+
+# Precipitação por Estado no Mês de Setembro
+
 <center>
 <img src="charts/rainByStateSeptember.png" height=450vh>
 </center>
@@ -439,6 +559,25 @@ FROM fct_clima
 WHERE dd.mes >6 AND dd.mes < 10 AND regiao_uf = 'Norte'
 GROUP BY dd.dia_ano, dlc.nome_municipio;
 ```
+
+---
+
+# Qualidade do ar na região Norte na época de secas
+
+| dia_ano | nome_municipio         | media_co_ppb       | media_pm25_ugm3    | media_o3_ppb       |
+| :------ | :--------------------- | :----------------- | :----------------- | :----------------- |
+| 273     | Abaetetuba             | 126.5364864864865  | 16.33888888888889  | 22.98918918918919  |
+| 182     | Paragominas            | 105.7703703703704  | 8.521153846153847  | 12.798148148148151 |
+| 238     | Trairão                | 296.8094594594594  | 42.1513888888889   | 12.963513513513517 |
+| 205     | Ananás                 | 159.78243243243244 | 9.97605633802817   | 16.759459459459446 |
+| 220     | Abel Figueiredo        | 178.3148648648649  | 15.027631578947373 | 17.68648648648648  |
+| 261     | Fonte Boa              | 186.30810810810817 | 16.570666666666668 | 8.704054054054051  |
+| 241     | Uiramutã               | 111.07702702702704 | 14.505555555555556 | 10.74459459459459  |
+| 194     | Vilhena                | 234.28108108108108 | 103.85263157894738 | 11.532432432432438 |
+| 215     | Magalhães Barata       | 88.17432432432435  | 7.882894736842106  | 20.751351351351357 |
+| 266     | Mazagão                | 107.36216216216215 | 10.719444444444447 | 21.093243243243236 |
+| 190     | Moju                   | 105.6945945945946  | 12.963157894736838 | 15.00945945945946  |
+| 262     | Campo Novo de Rondônia | 1808.2702702702707 | 225.7736111111111  | 20.451351351351363 |
 
 ---
 
@@ -466,6 +605,31 @@ FROM fct_clima
 GROUP BY ROLLUP
     ((dd.ano, dl.regiao_uf),(dl.nome_uf, dd.mes))
 ```
+
+---
+
+# RollUp Precipitação média por Ano, Região, mês e Estado
+
+| ano  | mes  | nome_uf           | regiao_uf    | media_precipitacao  |
+| :--- | :--- | :---------------- | :----------- | :------------------ |
+| null | null | null              | null         | 3.4866503356336795  |
+| 2017 | 7    | São Paulo         | Sudeste      | 0.07176794198549638 |
+| 2015 | 5    | Amapá             | Norte        | 7.189516129032258   |
+| 2013 | 12   | Rio de Janeiro    | Sudeste      | 8.447405329593268   |
+| 2018 | 9    | Amapá             | Norte        | 1.9                 |
+| 2007 | 9    | Rio Grande do Sul | Sul          | 6.345070422535211   |
+| 2007 | 1    | Goiás             | Centro-Oeste | 8.368738526094939   |
+| 2003 | 1    | São Paulo         | Sudeste      | 11.421355338834708  |
+| 2005 | 8    | Roraima           | Norte        | 4.313978494623656   |
+| 2003 | 2    | Minas Gerais      | Sudeste      | 2.2778010383520346  |
+| 2013 | 10   | Amapá             | Norte        | 1.8205645161290323  |
+| 2008 | 9    | Espírito Santo    | Sudeste      | 1.2837606837606839  |
+
+---
+
+# RollUp Precipitação média por Ano, Região, mês e Estado
+
+Não conseguimos pensar em uma visualização adequada, por causa da mudança de granularidade em múltiplas dimensões.
 
 ---
 
