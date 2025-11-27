@@ -660,4 +660,8 @@ Não conseguimos pensar em uma visualização adequada, por causa da mudança de
 
 # **Perguntas?**
 
-UwU
+```
+(U ﹏ U)
+```
+
+## ![bg right fit](https://youtooz.com/cdn/shop/products/1o1q6m2g7o.png?v=1762200550)
