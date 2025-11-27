@@ -53,6 +53,20 @@ Clara Ernesto de Carvalho - 14559479
 
 ## Fontes de Dados
 
+### Problema com horários
+
+O Dataset de Clima possui dados apenas coletados com horas 0, 6, 12 e 18.
+
+Sendo assim, quando juntamos os dados de Clima com os de Queimadas, perdemos muitos dados.
+
+Outra opção seria interpolar os dados de Clima para os horários faltantes.
+
+Decidimos manter apenas os horários disponíveis no Dataset de Clima, já que não impactava significativamente a análise.
+
+---
+
+## Fontes de Dados
+
 ### **Geográficos - IBGE**
 
 - Diretórios de UFs e municípios
@@ -63,7 +77,7 @@ Clara Ernesto de Carvalho - 14559479
 # Objetivo
 
 - Consolidação de dados do INPE (Instituto Nacional de Pesquisas Espaciais) relativos a focos de queimadas e clima
-- Criação de um Data Warehouse com dados históricos (desde 2003 (alguém corrige essa data))
+- Criação de um Data Warehouse com dados históricos
 - Geração de visualizações baseadas em consultas analíticas para tomada estratégica de decisões
 
 ---
@@ -130,9 +144,23 @@ Provisionamos com Terraform:
 
 ## Google Cloud Platform
 
-Tava de graça 🙏 (Deram 1800 reais de crédito pra gente)
+Conseguimos créditos para estudantes.
+
+Algumas das VMs utilizadas eram Spot, portanto podem ser derrubadas a qualquer momento.
 
 ## ![bg right fit](https://media.licdn.com/dms/image/v2/D5612AQEjZljStRxpOQ/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1691568005689?e=2147483647&v=beta&t=PbaaQ-GXlNVWUG6ct-poejXcFb2-i6TuaqqrDfwwnZY)
+
+---
+
+# Base de Dados
+
+## PostgreSQL
+
+Utilizamos Citus para armazenamento colunar
+
+> Ol'reliable
+
+## ![bg right fit](https://preview.redd.it/unpaiddevs-v0-ogtgvcdrn9tf1.png?auto=webp&s=c88c93b323c0564d7ec49aaade10baa8c5757526)
 
 ---
 
