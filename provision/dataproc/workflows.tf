@@ -61,33 +61,37 @@ locals {
 }
 
 resource "google_workflows_workflow" "etl" {
-  name            = "wildfire-etl-gcs-postgres"
-  region          = var.gcp_region
-  description     = "Submits the Wildfire PySpark job to Dataproc Serverless (GCS -> Postgres)"
-  service_account = google_service_account.workflow_orchestrator.email
-  source_contents = local.workflow_source
+  name                = "wildfire-etl-gcs-postgres"
+  region              = var.gcp_region
+  description         = "Submits the Wildfire PySpark job to Dataproc Serverless (GCS -> Postgres)"
+  service_account     = google_service_account.workflow_orchestrator.email
+  source_contents     = local.workflow_source
+  deletion_protection = false
 }
 
 resource "google_workflows_workflow" "etl_gcs" {
-  name            = "wildfire-etl-gcs"
-  region          = var.gcp_region
-  description     = "Submits the Wildfire PySpark job to Dataproc Serverless (GCS -> GCS)"
-  service_account = google_service_account.workflow_orchestrator.email
-  source_contents = local.workflow_source_gcs
+  name                = "wildfire-etl-gcs"
+  region              = var.gcp_region
+  description         = "Submits the Wildfire PySpark job to Dataproc Serverless (GCS -> GCS)"
+  service_account     = google_service_account.workflow_orchestrator.email
+  source_contents     = local.workflow_source_gcs
+  deletion_protection = false
 }
 
 resource "google_workflows_workflow" "etl_bq_gcs" {
-  name            = "wildfire-etl-bq-gcs"
-  region          = var.gcp_region
-  description     = "Submits the Wildfire PySpark job to Dataproc Serverless (BQ -> GCS)"
-  service_account = google_service_account.workflow_orchestrator.email
-  source_contents = local.workflow_source_bq_gcs
+  name                = "wildfire-etl-bq-gcs"
+  region              = var.gcp_region
+  description         = "Submits the Wildfire PySpark job to Dataproc Serverless (BQ -> GCS)"
+  service_account     = google_service_account.workflow_orchestrator.email
+  source_contents     = local.workflow_source_bq_gcs
+  deletion_protection = false
 }
 
 resource "google_workflows_workflow" "etl_bq_postgres" {
-  name            = "wildfire-etl-bq-postgres"
-  region          = var.gcp_region
-  description     = "Submits the Wildfire PySpark job to Dataproc Serverless (BQ -> Postgres)"
-  service_account = google_service_account.workflow_orchestrator.email
-  source_contents = local.workflow_source_bq_postgres
+  name                = "wildfire-etl-bq-postgres"
+  region              = var.gcp_region
+  description         = "Submits the Wildfire PySpark job to Dataproc Serverless (BQ -> Postgres)"
+  service_account     = google_service_account.workflow_orchestrator.email
+  source_contents     = local.workflow_source_bq_postgres
+  deletion_protection = false
 }

@@ -9,12 +9,3 @@ resource "google_sql_database" "wildfire" {
   collation       = "en_US.UTF8"
   deletion_policy = "ABANDON"
 }
-
-resource "google_sql_user" "wildfire" {
-  instance = data.google_sql_database_instance.main.name
-  name     = var.db_user
-  password = var.db_password
-  type     = "BUILT_IN"
-
-  depends_on = [google_sql_database.wildfire]
-}
